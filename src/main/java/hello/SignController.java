@@ -1,5 +1,6 @@
 package hello;
 
+import javafx.util.Pair;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,31 +47,10 @@ public class SignController {
         String signature = new BigInteger(1, realSig).toString(16);
 
 
-        System.out.println("Signature: " + signature);
         dsa2.initVerify(pub);
         dsa2.update(strByte);
         //return dsa2.verify(realSig);
         return dsa2.verify(DatatypeConverter.parseHexBinary(signature));
-    }
-
-    private String sign(String privKey, String message) throws Exception {
-        KeyFactory fact = KeyFactory.getInstance("EC");
-        PrivateKey privateKey = fact.generatePrivate(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privKey.getBytes())));
-
-        Signature dsa = Signature.getInstance("SHA1withECDSA");
-        dsa.initSign(privateKey);
-        dsa.update(message.getBytes("UTF-8"));
-        return new BigInteger(1, dsa.sign()).toString(16);
-    }
-
-    private boolean verify(String message, String pubKey, String sign) throws Exception {
-        KeyFactory fact = KeyFactory.getInstance("EC");
-        PublicKey publicKey = fact.generatePublic(new PKCS8EncodedKeySpec(Base64.getDecoder().decode(pubKey.getBytes())));
-
-        Signature dsa = Signature.getInstance("SHA1withECDSA");
-        dsa.initVerify(publicKey);
-        dsa.update(message.getBytes("UTF-8"));
-        return dsa.verify(sign.getBytes());
     }
 
 }
