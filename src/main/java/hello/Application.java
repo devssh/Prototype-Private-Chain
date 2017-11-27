@@ -9,9 +9,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 
-/**
- * Created by laurajoe on 3/15/17.
- */
 @SpringBootApplication
 public class Application {
 
