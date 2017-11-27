@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World.iml" filepath="$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_main.iml" filepath="$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_main.iml" group="Spring-Boot-Hello-World" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_test.iml" filepath="$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_test.iml" group="Spring-Boot-Hello-World" />
+    </modules>
+  </component>
+</project>
