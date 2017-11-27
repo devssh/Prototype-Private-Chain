@@ -1,11 +1,11 @@
 package hello;
 
 import javafx.util.Pair;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.eclipse.jetty.client.api.Response;
+import org.springframework.web.bind.annotation.*;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,34 +20,130 @@ public class BlockchainController {
 
     @GetMapping(value = "/land", produces = "application/json")
     public String landBlockchain() throws Exception {
-        return blockchain();
-    }
-
-    public String blockchain() throws Exception{
-        /*
-        Pair<PublicKey, PrivateKey> keysAdmin = generateKeys();
-        Pair<PublicKey, PrivateKey> keysDev = generateKeys();
-        Pair<PublicKey, PrivateKey> keysRajiv = generateKeys();
-
-        List<String> keys = new ArrayList<String>(){{
-           add(encodeKeyToString(keysAdmin.getKey()));
-           add(encodeKeyToString(keysAdmin.getValue()));
-           add(encodeKeyToString(keysDev.getKey()));
-           add(encodeKeyToString(keysDev.getValue()));
-           add(encodeKeyToString(keysRajiv.getKey()));
-           add(encodeKeyToString(keysRajiv.getValue()));
-        }};
-        Files.write(Paths.get("keys.dat"), keys);
-        */
         List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
         Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
-        keysDev = new Pair<>(keys.get(2), keys.get(3)),
-        keysRajiv = new Pair<>(keys.get(4), keys.get(5));
+                keysDev = new Pair<>(keys.get(2), keys.get(3)),
+                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
+
+        List<String> blocks = getBlocks();
+
+        return surroundWithBraces(addComma(blocks));
+    }
+
+    //TODO: Change to PostMapping
+    @GetMapping(value = "/create", produces = "application/json")
+    public Object addBlock(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
+        List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
+        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
+                keysDev = new Pair<>(keys.get(2), keys.get(3)),
+                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
+
+        List<String> blocks = getBlocks();
+
+        appendBlocks(createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, extractSignature(blocks.get(blocks.size() - 1))));
+        return Response.SC_OK;
+    }
+
+    @GetMapping(value = "/authorized", produces = "application/json")
+    public String showAuthorized() throws Exception {
+        List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
+        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
+                keysDev = new Pair<>(keys.get(2), keys.get(3)),
+                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
+
+
+        return surroundWithBraces(addComma(
+                superKeyValuePair("Dev", keyValuePair("publicKey", keysAdmin.getKey())),
+                superKeyValuePair("Devashish", keyValuePair("publicKey", keysDev.getKey())),
+                superKeyValuePair("Rajiv", keyValuePair("publicKey", keysRajiv.getKey()))
+        ));
+    }
+
+    @GetMapping(value = "/verifyAllSignatures", produces = "application/json")
+    public String verifyAllSignatures() throws Exception {
+        List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
+        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
+                keysDev = new Pair<>(keys.get(2), keys.get(3)),
+                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
+
+        List<String> blocks = getBlocks();
+
+        String genesis = blocks.get(0);
+        boolean isValid = verify(extract("message", genesis) + extract("owner", genesis) + extract("aadhar", genesis),
+                keysAdmin.getKey(), extractSignature(genesis));
+
+        for (int i = 1; i < blocks.size(); i++) {
+            String block = blocks.get(i);
+            String previousHash = extractSignature(blocks.get(i - 1));
+            isValid = isValid & (isValid(block, previousHash, keysAdmin.getKey()) |
+                    isValid(block, previousHash, keysDev.getKey()) |
+                    isValid(block, previousHash, keysRajiv.getKey())
+            );
+        }
+
+        return String.valueOf(isValid);
+    }
+
+    @PostMapping(value = "/verify")
+    public String verifySignature(@RequestParam String sign, @RequestParam String pubKey, @RequestParam String data) throws Exception {
+        return "<form action=\"verify\" method=\"post\">" +
+                "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign + "\"/><br/><br/>" +
+                "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data + "\"/><br/><br/>" +
+                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey + "\"/><br/><br/>" +
+                "<input type=\"submit\" value=\"Submit\"/>" +
+                "</form><br/><br/>" +
+                "Signature Verified: " + verify(data, pubKey, sign);
+    }
+
+    @GetMapping(value = "/verify-form")
+    public String verifyForm() {
+        return "<form action=\"verify\" method=\"post\">" +
+                "Signature: <input type=\"text\" name=\"sign\"/><br/><br/>" +
+                "BlockData: <input type=\"text\" name=\"data\"/><br/><br/>" +
+                "pubKey: <input type=\"text\" name=\"pubKey\"/><br/><br/>" +
+                "<input type=\"submit\" value=\"Submit\"/>" +
+                "</form>";
+    }
+
+
+    private boolean isValid(String block, String previousHash, String publicKey) throws Exception {
+        return verify(extract("message", block)
+                        + extract("owner", block)
+                        + extract("aadhar", block)
+                        + previousHash,
+                publicKey, extractSignature(block));
+    }
+
+    private List<String> getBlocks() throws Exception {
+        return Files.readAllLines(Paths.get("blocks.dat"));
+    }
+
+    private List<String> appendBlocks(String... blocks) throws Exception {
+        Writer output = new BufferedWriter(new FileWriter("blocks.dat", true));
+        for (String block : blocks) {
+            output.append(block + "\n");
+            output.flush();
+        }
+
+        output.close();
+
+        return getBlocks();
+    }
+
+    public String blockchain() throws Exception {
+        List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
+        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
+                keysDev = new Pair<>(keys.get(2), keys.get(3)),
+                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
 
         String genesis = createGenesisBlock(keysAdmin.getKey(), keysAdmin.getValue());
-        String firstBlock = createBlock(keysDev.getKey(), keysDev.getValue(), extractPreviousHash(genesis));
 
-        return "{" + addComma(genesis, firstBlock) + "}";
+        String message = "Plot 1, Shastri Nagar, Adyar, Chennai 600023";
+        String owner = "Devashish";
+        String aadhar = "19452";
+        String firstBlock = createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, extractSignature(genesis));
+
+        return surroundWithBraces(addComma(genesis, firstBlock));
     }
 
 
@@ -56,19 +152,14 @@ public class BlockchainController {
         String owner = "Rajiv";
         String aadhar = "12582";
 
-        String sign = sign(privateKey, message+owner+aadhar);
-
-        System.out.println(verify(message + owner + aadhar, publicKey, sign));
-
-        return blockFormat(sign, message, owner, aadhar);
+        return createBlock(publicKey, privateKey, message, owner, aadhar, "");
     }
 
-    public String createBlock(String publicKey, String privateKey, String previousHash) throws Exception {
-        String message = "Plot 1, Shastri Nagar, Adyar, Chennai 600023";
-        String owner = "Devashish";
-        String aadhar = "19452";
+    public String createBlock(String publicKey, String privateKey, String message, String owner, String aadhar, String previousHash) throws Exception {
         String sign = sign(privateKey, message + owner + aadhar + previousHash);
+
         System.out.println(verify(message + owner + aadhar + previousHash, publicKey, sign));
+
         return blockFormat(sign, message, owner, aadhar);
     }
 
@@ -77,10 +168,14 @@ public class BlockchainController {
                 keyValuePair("aadhar", aadhar)));
     }
 
-    private String extractPreviousHash(String block) {
+    private String extractSignature(String block) {
         //Pattern signature = Pattern.compile(".*\"sign\":\"(.*)\".*");
         //return signature.matcher(block).group(0);
         return block.split("\":")[0].substring(1);
+    }
+
+    private String extract(String field, String block) {
+        return block.split("\"" + field + "\":\"")[1].split("\"")[0];
     }
 
     private String surroundWithBraces(String value) {
@@ -91,6 +186,14 @@ public class BlockchainController {
         return String.join(",", values);
     }
 
+    private String addComma(List<String> values) {
+        return addComma(values.toArray(new String[0]));
+    }
+
+    private String superKeyValuePair(String key, String value) {
+        return "\"" + key + "\":{" + value + "}";
+    }
+
     private String keyValuePair(String key, String value) {
         return keyValuePair(key, value, true);
     }
@@ -99,6 +202,7 @@ public class BlockchainController {
         if (noBraces) {
             return "\"" + key + "\":\"" + value + "\"";
         }
+
         return surroundWithBraces(key + ":" + value);
     }
 

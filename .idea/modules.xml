@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World.iml" filepath="$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_main.iml" filepath="$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_main.iml" group="Spring-Boot-Hello-World" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_test.iml" filepath="$PROJECT_DIR$/.idea/modules/Spring-Boot-Hello-World_test.iml" group="Spring-Boot-Hello-World" />
+      <module fileurl="file://$PROJECT_DIR$/src/main/main.iml" filepath="$PROJECT_DIR$/src/main/main.iml" />
     </modules>
   </component>
 </project>
