@@ -18,8 +18,8 @@ import java.util.List;
 @RestController
 public class BlockchainController {
 
-    @GetMapping(value = "/land", produces = "application/json")
-    public String landBlockchain() throws Exception {
+    @GetMapping(value = "/coupons", produces = "application/json")
+    public String couponBlockchain() throws Exception {
         List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
         Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
                 keysDev = new Pair<>(keys.get(2), keys.get(3)),
@@ -32,7 +32,7 @@ public class BlockchainController {
 
     //TODO: Change to PostMapping
     @GetMapping(value = "/create", produces = "application/json")
-    public Object addBlock(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
+    public String addBlock(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
         List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
         Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
                 keysDev = new Pair<>(keys.get(2), keys.get(3)),
@@ -40,8 +40,10 @@ public class BlockchainController {
 
         List<String> blocks = getBlocks();
 
-        appendBlocks(createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, extractSignature(blocks.get(blocks.size() - 1))));
-        return Response.SC_OK;
+        String prevHash = extractSignature(blocks.get(blocks.size() - 1));
+        appendBlocks(createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, prevHash));
+
+        return "Success: \nBlockdata: " + message+owner+aadhar+prevHash + " \nPublicKey: " + keysDev.getKey();
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
@@ -98,7 +100,7 @@ public class BlockchainController {
     @GetMapping(value = "/verify-form")
     public String verifyForm() {
         return "<form action=\"verify\" method=\"post\">" +
-                "Signature: <input type=\"text\" name=\"sign\"/><br/><br/>" +
+                "Hash: <input type=\"text\" name=\"sign\"/><br/><br/>" +
                 "BlockData: <input type=\"text\" name=\"data\"/><br/><br/>" +
                 "pubKey: <input type=\"text\" name=\"pubKey\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
@@ -138,7 +140,7 @@ public class BlockchainController {
 
         String genesis = createGenesisBlock(keysAdmin.getKey(), keysAdmin.getValue());
 
-        String message = "Plot 1, Shastri Nagar, Adyar, Chennai 600023";
+        String message = "Coupon201KX";
         String owner = "Devashish";
         String aadhar = "19452";
         String firstBlock = createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, extractSignature(genesis));
