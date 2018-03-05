@@ -10,19 +10,19 @@ and visit localhost:8080
 
 
 ## Home screen
-![](https://cdn.rawgit.com/devssh/blockchain-server/59253b21/Home%20screen.png)
+![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Home%20screen.png)
 
 ## Initial chain
-![](https://cdn.rawgit.com/devssh/blockchain-server/59253b21/Initial%20chain.png)
+![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Initial%20chain.png)
 
 ## Authority Dev processes transaction
-![](https://cdn.rawgit.com/devssh/blockchain-server/59253b21/Request%20transaction.png)
+![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Request%20transaction.png)
 
 ## Updated state of chain
-![](https://cdn.rawgit.com/devssh/blockchain-server/59253b21/Updated%20chain.png)
+![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Updated%20chain.png)
 
 ## Authorities public keys
-![](https://cdn.rawgit.com/devssh/blockchain-server/59253b21/Authorities.png)
+![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Authorities.png)
 
 ## Any user can verify chain using this interface or locally by writing their own code
-![](https://cdn.rawgit.com/devssh/blockchain-server/59253b21/Verification.png)
+![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Verification.png)
