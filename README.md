@@ -1,4 +1,5 @@
-# Prototype blockchain on Java, just to demonstrate hashing and signature verification
+# Prototype chain on Java, just to demonstrate hashing and signature verification
+There is no mining involved or clubbing of transactions in a block. The purpose is to verify signatures signed by authorities.
 
 ## To run the demo 
 ```
