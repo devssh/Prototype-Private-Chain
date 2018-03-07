@@ -17,6 +17,7 @@ To reset the project to its initial state, remove everything except the genesis 
 This endpoint is a simulation provided to show how an authorized miner(in this case its the authority named "Dev") would sign transactions after verifying the integrity.
 5. Visit the coupons page to verify that the transactions have been updated. We usually wait for the new transactions to be at least 'x' blocks deep based on the cost of mining a block. Thus if a block costs $1 to mine we would wait 100 transactions to verify that it has been added.(Now it costs at least $100 to modify.) We don't have to spend $1 to mine it, we can spend/create virutal tokens for that amount and distribute it free to users to try out the service or to incentivise miners to copy the blockchain and dedicate computing resources.
 6. Verify the transaction in localhost:8080/verify-form with the information provided in the coupons page.(which uses a public algorithm so that anyone can verify the data without having to depend on this page. A helper has been added in the create page to display the data needed to fill this form. The signatures are available in the coupons page)
+Verification costs nothing compared to creating blocks.
 
 
 ## Home screen
@@ -34,5 +35,5 @@ This endpoint is a simulation provided to show how an authorized miner(in this c
 ## Authorities public keys
 ![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Authorities.png)
 
-## Any user can verify chain using this interface or locally by writing their own code
+## Any user can verify the chain's signatures using this interface or using the public algorithm
 ![](https://cdn.rawgit.com/devssh/Prototype-Private-Chain/392e33d9/Verification.png)
