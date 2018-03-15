@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class BlockchainController {
-    CryptoService cryptoService = new CryptoService();
+    CryptoService cryptoService = new CryptoService("keys.dat", "blocks.dat");
+
+    public BlockchainController() throws Exception {
+
+    }
 
     @GetMapping(value = "/coupons", produces = "application/json")
     public String couponBlockchain() throws Exception {
@@ -18,7 +22,7 @@ public class BlockchainController {
     //TODO: Change to PostMapping
     @GetMapping(value = "/create", produces = "application/json")
     public String addBlock(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
-        return cryptoService.addBlock(message, owner, aadhar);
+        return "Success: \n" + cryptoService.addBlock(message, owner, aadhar);
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
@@ -51,6 +55,12 @@ public class BlockchainController {
                 "<input type=\"submit\" value=\"Submit\"/>" +
                 "</form>";
     }
+
+    @GetMapping(value = "/showGenesis")
+    public String verifyForm(@RequestParam String message, String owner, String aadhar) throws Exception {
+        return cryptoService.showGenesis(message, owner, aadhar);
+    }
+
 
 
 }

@@ -26,11 +26,11 @@ public class CryptoUtils {
                 publicKey, extractSignature(block));
     }
 
-    public List<String> getBlocks() throws Exception {
-        return Files.readAllLines(Paths.get("blocks.dat"));
+    public List<String> getBlocks(String blockFile) throws Exception {
+        return Files.readAllLines(Paths.get(blockFile));
     }
 
-    public List<String> appendBlocks(String... blocks) throws Exception {
+    public List<String> appendBlocks(String blockFile, String... blocks) throws Exception {
         Writer output = new BufferedWriter(new FileWriter("blocks.dat", true));
         for (String block : blocks) {
             output.append(block + "\n");
@@ -39,31 +39,22 @@ public class CryptoUtils {
 
         output.close();
 
-        return getBlocks();
+        return getBlocks(blockFile);
     }
 
-    public String blockchain() throws Exception {
+    public String initBlockchain(String message, String owner, String aadhar) throws Exception {
         List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
         Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
                 keysDev = new Pair<>(keys.get(2), keys.get(3)),
                 keysRajiv = new Pair<>(keys.get(4), keys.get(5));
 
-        String genesis = createGenesisBlock(keysAdmin.getKey(), keysAdmin.getValue());
+        String genesis = createGenesisBlock(keysAdmin.getKey(), keysAdmin.getValue(), message, owner, aadhar);
 
-        String message = "Coupon201KX";
-        String owner = "Devashish";
-        String aadhar = "19452";
-        String firstBlock = createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, extractSignature(genesis));
-
-        return surroundWithBraces(addComma(genesis, firstBlock));
+        return surroundWithBraces(addComma(genesis));
     }
 
 
-    public String createGenesisBlock(String publicKey, String privateKey) throws Exception {
-        String message = "Genesis Block";
-        String owner = "Rajiv";
-        String aadhar = "12582";
-
+    public String createGenesisBlock(String publicKey, String privateKey, String message, String owner, String aadhar) throws Exception {
         return createBlock(publicKey, privateKey, message, owner, aadhar, "");
     }
 
@@ -75,7 +66,7 @@ public class CryptoUtils {
         return blockFormat(sign, message, owner, aadhar);
     }
 
-    public String blockFormat(String sign, String message, String owner, String aadhar) {
+    private String blockFormat(String sign, String message, String owner, String aadhar) {
         return "\"" + sign + "\":" + surroundWithBraces(addComma(keyValuePair("message", message), keyValuePair("owner", owner),
                 keyValuePair("aadhar", aadhar)));
     }
@@ -110,7 +101,7 @@ public class CryptoUtils {
         return keyValuePair(key, value, true);
     }
 
-    public String keyValuePair(String key, String value, boolean noBraces) {
+    private String keyValuePair(String key, String value, boolean noBraces) {
         if (noBraces) {
             return "\"" + key + "\":\"" + value + "\"";
         }
@@ -132,18 +123,18 @@ public class CryptoUtils {
         return new Pair<>(pub, priv);
     }
 
-    public String sign(PrivateKey privateKey, String message) throws Exception {
+    private String sign(PrivateKey privateKey, String message) throws Exception {
         Signature dsa = Signature.getInstance("SHA1withECDSA");
         dsa.initSign(privateKey);
         dsa.update(message.getBytes("UTF-8"));
         return new BigInteger(1, dsa.sign()).toString(16);
     }
 
-    public String sign(String privKey, String message) throws Exception {
+    private String sign(String privKey, String message) throws Exception {
         return sign(decodePrivateKeyFromString(privKey), message);
     }
 
-    public boolean verify(String blockMessage, PublicKey publicKey, String sign) throws Exception {
+    private boolean verify(String blockMessage, PublicKey publicKey, String sign) throws Exception {
         Signature dsa = Signature.getInstance("SHA1withECDSA");
         dsa.initVerify(publicKey);
         dsa.update(blockMessage.getBytes("UTF-8"));
@@ -158,17 +149,17 @@ public class CryptoUtils {
         return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 
-    public PublicKey decodePublicKeyFromString(String key) throws Exception {
+    private PublicKey decodePublicKeyFromString(String key) throws Exception {
         KeyFactory fact = KeyFactory.getInstance("EC");
         return fact.generatePublic(new X509EncodedKeySpec(decodeKeyFromString(key)));
     }
 
-    public PrivateKey decodePrivateKeyFromString(String key) throws Exception {
+    private PrivateKey decodePrivateKeyFromString(String key) throws Exception {
         KeyFactory fact = KeyFactory.getInstance("EC");
         return fact.generatePrivate(new PKCS8EncodedKeySpec(decodeKeyFromString(key)));
     }
 
-    public byte[] decodeKeyFromString(String key) throws UnsupportedEncodingException {
+    private byte[] decodeKeyFromString(String key) throws UnsupportedEncodingException {
         return Base64.getDecoder().decode(key.getBytes("UTF-8"));
     }
 
