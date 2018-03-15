@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class BlockchainController {
     CryptoService cryptoService = new CryptoService("keys.dat", "blocks.dat");
+    public String basicSign = "MFkwEw";
 
     public BlockchainController() throws Exception {
 
@@ -21,8 +22,11 @@ public class BlockchainController {
 
     //TODO: Change to PostMapping
     @GetMapping(value = "/create", produces = "application/json")
-    public String addBlock(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
-        return "Success: \n" + cryptoService.addBlock(message, owner, aadhar);
+    public String addBlock(@RequestParam String sign, @RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
+        if (sign.equals(basicSign)) {
+            return "Success: \n" + cryptoService.addBlock(message, owner, aadhar);
+        }
+        return "Invalid signature for Dev";
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
@@ -60,7 +64,6 @@ public class BlockchainController {
     public String verifyForm(@RequestParam String message, String owner, String aadhar) throws Exception {
         return cryptoService.showGenesis(message, owner, aadhar);
     }
-
 
 
 }
