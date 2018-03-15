@@ -1,14 +1,11 @@
-package hello;
+package app.controller;
 
-import javafx.util.Pair;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 
 @RestController
 public class SignController {

@@ -1,10 +1,9 @@
-package hello;
+package app.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestController
-public class HelloController {
+public class HomePageController {
 
     @GetMapping(value = "/", produces = "application/json")
     public String index() {
@@ -15,9 +14,5 @@ public class HelloController {
         "Checkout /verify-form to validate signature";
     }
 
-    @RequestMapping("/aa")
-    public String index1() {
-        return "This is from /aa";
-    }
 
 }
