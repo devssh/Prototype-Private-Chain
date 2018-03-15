@@ -2,3 +2,5 @@
 .idea/**
 build/**
 .gradle/**
+.gradle/3.1/**
+
