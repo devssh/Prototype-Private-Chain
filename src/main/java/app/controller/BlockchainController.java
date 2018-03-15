@@ -15,7 +15,7 @@ public class BlockchainController {
 
     }
 
-    @GetMapping(value = "/coupons", produces = "application/json")
+    @GetMapping(value = "/coupons-explorer", produces = "application/json")
     public String couponBlockchain() throws Exception {
         return cryptoService.getBlockchain();
     }

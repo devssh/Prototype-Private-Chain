@@ -10,7 +10,7 @@ and visit localhost:8080
 
 ## Steps to be followed
 1. Visit localhost:8080 to check this list of instructions and verify health of the server.
-2. Visit localhost:8080/coupons to see the current state of the chain. The data related to this is stored on blocks.dat.
+2. Visit localhost:8080/coupons-explorer to see the current state of the chain. The data related to this is stored on blocks.dat.
 To reset the project to its initial state, remove everything except the genesis block(line1 of blocks.dat)
 3. Visit localhost:8080/authorized to view the public keys of the authorities. Everyone in the blockchain can see the public keys of these trusted delegates.
 4. Visit localhost:8080/create?sign=MFkwEw&message=MESSAGE_HERE&owner=OWNER_HERE&aadhar=AADHAR_HERE as shown in the image below.
