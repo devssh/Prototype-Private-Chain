@@ -1,14 +1,14 @@
 # Prototype chain on Java, just to demonstrate hashing and signature verification
-There is no mining involved or clubbing of transactions in a block. The purpose is to verify signatures signed by authorities.
+There is clubbing of transactions in a block. The purpose is to verify signatures signed by authorities and mined by a miner at difficulty=3.
 
-## To run the demo 
+## To run the demo on JDK8
 ```
 ./gradlew bootRun
 ```
 
 and visit localhost:8080
 
-## Steps to be followed
+## Workflow
 1. Visit localhost:8080 to check this list of instructions and verify health of the server.
 2. Visit localhost:8080/coupons-explorer to see the current state of the chain. The data related to this is stored on blocks.dat.
 To reset the project to its initial state, remove everything except the genesis block(line1 of blocks.dat)
