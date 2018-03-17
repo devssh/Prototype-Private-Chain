@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class BlockchainController {
     CryptoService cryptoService = new CryptoService("keys.dat", "blocks.dat");
+    String messageKey = "message";
+    String ownerKey = "owner";
+    String aadharKey = "aadhar";
+
     public String basicSign = "MFkwEw";
 
     public BlockchainController() throws Exception {
@@ -24,7 +28,9 @@ public class BlockchainController {
     @GetMapping(value = "/create", produces = "application/json")
     public String addBlock(@RequestParam String sign, @RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
         if (sign.equals(basicSign)) {
-            return "Success: \n" + cryptoService.addBlock(message, owner, aadhar);
+            Long start = System.currentTimeMillis();
+            String out = cryptoService.addBlock(message, owner, aadhar);
+            return "Success: \n" + out + "\nTime: " + (System.currentTimeMillis() - start);
         }
         return "Invalid signature for Dev";
     }
@@ -42,9 +48,9 @@ public class BlockchainController {
     @PostMapping(value = "/verify")
     public String verifySignature(@RequestParam String sign, @RequestParam String pubKey, @RequestParam String data) throws Exception {
         return "<form action=\"verify\" method=\"post\">" +
-                "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign + "\"/><br/><br/>" +
-                "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data + "\"/><br/><br/>" +
-                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey + "\"/><br/><br/>" +
+                "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.trim() + "\"/><br/><br/>" +
+                "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.trim() + "\"/><br/><br/>" +
+                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.trim() + "\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
                 "</form><br/><br/>" +
                 "Signature Verified: " + cryptoService.verify(data, pubKey, sign);
@@ -53,7 +59,7 @@ public class BlockchainController {
     @GetMapping(value = "/verify-form")
     public String verifyForm() {
         return "<form action=\"verify\" method=\"post\">" +
-                "Hash: <input type=\"text\" name=\"sign\"/><br/><br/>" +
+                "Signature: <input type=\"text\" name=\"sign\"/><br/><br/>" +
                 "BlockData: <input type=\"text\" name=\"data\"/><br/><br/>" +
                 "pubKey: <input type=\"text\" name=\"pubKey\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
@@ -61,8 +67,13 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/showGenesis")
-    public String verifyForm(@RequestParam String message, String owner, String aadhar) throws Exception {
+    public String showGenesis(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
         return cryptoService.showGenesis(message, owner, aadhar);
+    }
+
+    @GetMapping(value = "/generateKey")
+    public String generateKey() throws Exception {
+        return cryptoService.generateKeyString();
     }
 
 

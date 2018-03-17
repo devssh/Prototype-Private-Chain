@@ -17,11 +17,14 @@ import java.util.Base64;
 import java.util.List;
 
 public class CryptoUtils {
+    String messageKey="message";
+    String ownerKey="owner";
+    String aadharKey="aadhar";
 
     public boolean isValid(String block, String previousHash, String publicKey) throws Exception {
-        return verify(extract("message", block)
-                        + extract("owner", block)
-                        + extract("aadhar", block)
+        return verify(extract(messageKey, block)
+                        + extract(ownerKey, block)
+                        + extract(aadharKey, block)
                         + previousHash,
                 publicKey, extractSignature(block));
     }
@@ -31,7 +34,7 @@ public class CryptoUtils {
     }
 
     public List<String> appendBlocks(String blockFile, String... blocks) throws Exception {
-        Writer output = new BufferedWriter(new FileWriter("blocks.dat", true));
+        Writer output = new BufferedWriter(new FileWriter(blockFile, true));
         for (String block : blocks) {
             output.append(block + "\n");
             output.flush();
@@ -42,8 +45,8 @@ public class CryptoUtils {
         return getBlocks(blockFile);
     }
 
-    public String initBlockchain(String message, String owner, String aadhar) throws Exception {
-        List<String> keys = Files.readAllLines(Paths.get("keys.dat"));
+    public String initBlockchain(String keyFile, String message, String owner, String aadhar) throws Exception {
+        List<String> keys = Files.readAllLines(Paths.get(keyFile));
         Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
                 keysDev = new Pair<>(keys.get(2), keys.get(3)),
                 keysRajiv = new Pair<>(keys.get(4), keys.get(5));
@@ -67,8 +70,8 @@ public class CryptoUtils {
     }
 
     private String blockFormat(String sign, String message, String owner, String aadhar) {
-        return "\"" + sign + "\":" + surroundWithBraces(addComma(keyValuePair("message", message), keyValuePair("owner", owner),
-                keyValuePair("aadhar", aadhar)));
+        return "\"" + sign + "\":" + surroundWithBraces(addComma(keyValuePair(messageKey, message), keyValuePair(ownerKey, owner),
+                keyValuePair(aadharKey, aadhar)));
     }
 
     public String extractSignature(String block) {
