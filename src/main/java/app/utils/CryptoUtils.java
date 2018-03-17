@@ -45,13 +45,14 @@ public class CryptoUtils {
         return getBlocks(blockFile);
     }
 
+
     public String initBlockchain(String keyFile, String message, String owner, String aadhar) throws Exception {
         List<String> keys = Files.readAllLines(Paths.get(keyFile));
-        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
+        Pair<String, String> keysMiner = new Pair<>(keys.get(0), keys.get(1)),
                 keysDev = new Pair<>(keys.get(2), keys.get(3)),
                 keysRajiv = new Pair<>(keys.get(4), keys.get(5));
 
-        String genesis = createGenesisBlock(keysAdmin.getKey(), keysAdmin.getValue(), message, owner, aadhar);
+        String genesis = createGenesisBlock(keysMiner.getKey(), keysMiner.getValue(), message, owner, aadhar);
 
         return surroundWithBraces(addComma(genesis));
     }
@@ -64,7 +65,7 @@ public class CryptoUtils {
     public String createBlock(String publicKey, String privateKey, String message, String owner, String aadhar, String previousHash) throws Exception {
         String sign = sign(privateKey, message + owner + aadhar + previousHash);
 
-        System.out.println(verify(message + owner + aadhar + previousHash, publicKey, sign));
+        //System.out.println(verify(message + owner + aadhar + previousHash, publicKey, sign));
 
         return blockFormat(sign, message, owner, aadhar);
     }
@@ -133,7 +134,7 @@ public class CryptoUtils {
         return new BigInteger(1, dsa.sign()).toString(16);
     }
 
-    private String sign(String privKey, String message) throws Exception {
+    public String sign(String privKey, String message) throws Exception {
         return sign(decodePrivateKeyFromString(privKey), message);
     }
 

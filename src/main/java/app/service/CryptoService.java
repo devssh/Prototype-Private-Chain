@@ -14,13 +14,15 @@ public class CryptoService {
     String messageKey = "message";
     String ownerKey = "owner";
     String aadharKey = "aadhar";
+    int difficulty = 3;
+    String difficultyCharacter="0";
 
 
     String keyFile;
     String blockFile;
 
     List<String> keys;
-    Pair<String, String> keysAdmin,
+    Pair<String, String> keysMiner,
             keysDev,
             keysRajiv;
 
@@ -29,7 +31,7 @@ public class CryptoService {
         this.keyFile = keyFile;
         this.blockFile = blockFile;
         this.keys = Files.readAllLines(Paths.get(keyFile));
-        this.keysAdmin = new Pair<>(keys.get(0), keys.get(1));
+        this.keysMiner = new Pair<>(keys.get(0), keys.get(1));
         this.keysDev = new Pair<>(keys.get(2), keys.get(3));
         this.keysRajiv = new Pair<>(keys.get(4), keys.get(5));
     }
@@ -37,7 +39,7 @@ public class CryptoService {
 
     public String getBlockchain() throws Exception {
         List<String> keys = Files.readAllLines(Paths.get(keyFile));
-        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
+        Pair<String, String> keysMiner = new Pair<>(keys.get(0), keys.get(1)),
                 keysDev = new Pair<>(keys.get(2), keys.get(3)),
                 keysRajiv = new Pair<>(keys.get(4), keys.get(5));
 
@@ -47,47 +49,53 @@ public class CryptoService {
     }
 
     public String addBlock(String message, String owner, String aadhar) throws Exception {
-
-
         List<String> blocks = cryptoUtils.getBlocks(blockFile);
 
         String prevHash = cryptoUtils.extractSignature(blocks.get(blocks.size() - 1));
-        cryptoUtils.appendBlocks(blockFile, cryptoUtils.createBlock(keysDev.getKey(), keysDev.getValue(), message, owner, aadhar, prevHash));
 
-        return "Blockdata: " + message + owner + aadhar + prevHash + " \nPublicKey: " + keysDev.getKey();
+        int i = -1;
+        String block="";
+        while (i < 100000) {
+            i = i + 1;
+            block = cryptoUtils.createBlock(keysDev.getKey(), keysDev.getValue(), message + "nonce:" + i, owner, aadhar, prevHash);
+            String sign = block.split(":")[0].substring(1).split("\"")[0];
+            int siglen = sign.length();
+
+            String expectedDifficulty = "";
+            for (int j = 0; j < difficulty; j++) {
+                expectedDifficulty = expectedDifficulty + difficultyCharacter;
+            }
+            if (sign.substring(siglen - difficulty, siglen).equals(expectedDifficulty)) {
+
+                cryptoUtils.appendBlocks(blockFile, block);
+                break;
+            }
+
+        }
+
+        return "Blockdata: " + message + "nonce:" + i + owner + aadhar + prevHash + " \nPublicKey: " + keysDev.getKey();
     }
 
     public String showAuthorized() throws Exception {
-        List<String> keys = Files.readAllLines(Paths.get(keyFile));
-        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
-                keysDev = new Pair<>(keys.get(2), keys.get(3)),
-                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
-
-
         return cryptoUtils.surroundWithBraces(cryptoUtils.addComma(
-                cryptoUtils.superKeyValuePair("Dev", cryptoUtils.keyValuePair("publicKey", keysAdmin.getKey())),
-                cryptoUtils.superKeyValuePair("Devashish", cryptoUtils.keyValuePair("publicKey", keysDev.getKey())),
+                cryptoUtils.superKeyValuePair("Dev", cryptoUtils.keyValuePair("publicKey", keysMiner.getKey())),
+                cryptoUtils.superKeyValuePair("Miner1", cryptoUtils.keyValuePair("publicKey", keysDev.getKey())),
                 cryptoUtils.superKeyValuePair("Rajiv", cryptoUtils.keyValuePair("publicKey", keysRajiv.getKey()))
         ));
     }
 
 
     public String verifyAllSignatures() throws Exception {
-        List<String> keys = Files.readAllLines(Paths.get(keyFile));
-        Pair<String, String> keysAdmin = new Pair<>(keys.get(0), keys.get(1)),
-                keysDev = new Pair<>(keys.get(2), keys.get(3)),
-                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
-
         List<String> blocks = cryptoUtils.getBlocks(blockFile);
 
         String genesis = blocks.get(0);
         boolean isValid = cryptoUtils.verify(cryptoUtils.extract(messageKey, genesis) + cryptoUtils.extract(ownerKey, genesis) + cryptoUtils.extract(aadharKey, genesis),
-                keysAdmin.getKey(), cryptoUtils.extractSignature(genesis));
+                keysMiner.getKey(), cryptoUtils.extractSignature(genesis));
 
         for (int i = 1; i < blocks.size(); i++) {
             String block = blocks.get(i);
             String previousHash = cryptoUtils.extractSignature(blocks.get(i - 1));
-            isValid = isValid & (cryptoUtils.isValid(block, previousHash, keysAdmin.getKey()) |
+            isValid = isValid & (cryptoUtils.isValid(block, previousHash, keysMiner.getKey()) |
                     cryptoUtils.isValid(block, previousHash, keysDev.getKey()) |
                     cryptoUtils.isValid(block, previousHash, keysRajiv.getKey())
             );

@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.TimeUnit;
+
 @RestController
 public class BlockchainController {
     CryptoService cryptoService = new CryptoService("keys.dat", "blocks.dat");
@@ -30,7 +32,7 @@ public class BlockchainController {
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
             String out = cryptoService.addBlock(message, owner, aadhar);
-            return "Success: \n" + out + "\nTime: " + (System.currentTimeMillis() - start);
+            return "Success: \n" + out + "\nComputational time: " + (System.currentTimeMillis() - start) + "ms";
         }
         return "Invalid signature for Dev";
     }
