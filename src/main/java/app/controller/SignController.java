@@ -10,7 +10,7 @@ import java.security.*;
 @RestController
 public class SignController {
 
-    @GetMapping(value = "/sign", produces = "application/json")
+    @GetMapping(value = "/signTest", produces = "application/json")
     public Object index() throws Exception {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
         SecureRandom random = SecureRandom.getInstance("SHA1PRNG");

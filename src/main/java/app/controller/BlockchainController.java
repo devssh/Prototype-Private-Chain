@@ -1,6 +1,7 @@
 package app.controller;
 
 import app.service.CryptoService;
+import app.service.KeyzManager;
 import app.service.SignService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +44,11 @@ public class BlockchainController {
                     "</form><br/><br/>" +
 
                     "Success: <br/><br/>" +
-                    verifyForm(Optional.of(block.get("Signature")), Optional.of(block.get("Blockdata")), Optional.of(block.get("Public Key"))) +
+                    verifyForm(
+                            Optional.of(block.get("Signature")),
+                            Optional.of(block.get("Blockdata")),
+                            Optional.of(block.get("Public Key"))
+                    ) +
                     "<br/><br/>Computational time: " + (System.currentTimeMillis() - start) + "ms";
         }
         return "Invalid signature for Dev";
@@ -105,6 +110,12 @@ public class BlockchainController {
     @GetMapping(value = "/stats")
     public String getStats() throws Exception {
         return cryptoService.getStats();
+    }
+
+    @GetMapping(value="/sign")
+    public String getSign(@RequestParam String data) throws Exception{
+        SignService signService = new SignService(new KeyzManager(cryptoService.keyzManager.keyFile));
+        return signService.signWith("Dev", data);
     }
 
 

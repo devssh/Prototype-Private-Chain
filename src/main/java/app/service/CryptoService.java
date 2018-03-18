@@ -23,7 +23,7 @@ public class CryptoService {
             keysDev,
             keysRajiv;
 
-    KeyzManager keyzManager;
+    public KeyzManager keyzManager;
     CryptoUtils cryptoUtils;
 
     public CryptoService(String keyFile, String blockFile) throws Exception {

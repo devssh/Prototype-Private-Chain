@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class KeyzManager {
     List<Keyz> keyz;
-    final String keyFile;
+    public final String keyFile;
 
     public KeyzManager(String keyFile) throws Exception {
         this.keyFile = keyFile;

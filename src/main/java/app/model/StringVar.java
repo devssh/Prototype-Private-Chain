@@ -15,31 +15,46 @@ public class StringVar {
     }
 
     public static List<StringVar> vars(String... variables) {
-        return new ArrayList<StringVar>(){{
-            for (int i = 0; i < variables.length; i=i+2) {
-                add(new StringVar(variables[i], variables[i+1]));
+        return new ArrayList<StringVar>() {{
+            for (int i = 0; i < variables.length; i = i + 2) {
+                add(new StringVar(variables[i], variables[i + 1]));
             }
         }};
     }
 
     public static Map<String, String> maps(String... variables) {
-        return new HashMap<String, String>(){{
-            for (int i = 0; i < variables.length; i=i+2) {
-                put(variables[i], variables[i+1]);
+        return new HashMap<String, String>() {{
+            for (int i = 0; i < variables.length; i = i + 2) {
+                put(variables[i], variables[i + 1]);
             }
         }};
     }
 
     public static String surroundWithBraces(String value) {
+        return surroundWithBraces(value, "curly");
+    }
+
+    public static String surroundWithBraces(String value, String type) {
+        if (type.equals("square")) {
+            return "[" + value + "]";
+        }
         return "{" + value + "}";
     }
 
+    public static String joinWith(String delim, String... values) {
+        return String.join(delim, values);
+    }
+
+    public static String joinWith(String delim, List<String> values) {
+        return joinWith(delim, values.toArray(new String[0]));
+    }
+
     public static String joinWithComma(String... values) {
-        return String.join(",", values);
+        return joinWith(",", values);
     }
 
     public static String joinWithComma(List<String> values) {
-        return joinWithComma(values.toArray(new String[0]));
+        return joinWith(",", values);
     }
 
     public static String superKeyValuePair(String key, String value) {

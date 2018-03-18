@@ -11,6 +11,7 @@ import java.security.Signature;
 public class SignService {
     public static final String signatureAlgo = "SHA1withECDSA";
     public static final String ENCODING = "UTF-8";
+    public static final int RADIX = 16;
 
     final KeyzManager keyzManager;
 
@@ -22,7 +23,7 @@ public class SignService {
         Signature dsa = Signature.getInstance(signatureAlgo);
         dsa.initSign(privateKey);
         dsa.update(message.getBytes(ENCODING));
-        return new BigInteger(1, dsa.sign()).toString(16);
+        return new BigInteger(1, dsa.sign()).toString(RADIX);
     }
 
     public String signWith(String signedBy, String message) throws Exception {
