@@ -1,6 +1,7 @@
 package app.controller;
 
 import app.service.CryptoService;
+import app.service.SignService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,7 +54,7 @@ public class BlockchainController {
                 "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.trim() + "\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
                 "</form><br/><br/>" +
-                "Signature Verified: " + cryptoService.verify(data, pubKey, sign);
+                "Signature Verified: " + SignService.verify(data, pubKey, sign);
     }
 
     @GetMapping(value = "/verify-form")

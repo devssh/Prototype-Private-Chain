@@ -2,17 +2,13 @@ package app.utils;
 
 import app.model.Keyz;
 import app.service.KeyzManager;
+import app.service.SignService;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.Writer;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
 import java.util.List;
 
 import static app.model.StringVar.*;
@@ -21,14 +17,17 @@ public class CryptoUtils {
     String messageKey="message";
     String ownerKey="owner";
     String aadharKey="aadhar";
+
     KeyzManager keyzManager;
+    SignService signService;
 
     public CryptoUtils(KeyzManager keyzManager) throws Exception {
         this.keyzManager = keyzManager;
+        this.signService = new SignService(keyzManager);
     }
 
     public boolean isValid(String block, String previousHash, String publicKey) throws Exception {
-        return verify(extract(messageKey, block)
+        return signService.verify(extract(messageKey, block)
                         + extract(ownerKey, block)
                         + extract(aadharKey, block)
                         + previousHash,
@@ -58,18 +57,18 @@ public class CryptoUtils {
                 keysDev = keyzManager.getKey("Dev"),
                 keysRajiv = keyzManager.getKey("Rajiv");
 
-        String genesis = createGenesisBlock(keysMiner.publicKey, keysMiner.privateKey, message, owner, aadhar);
+        String genesis = createGenesisBlock(keysMiner, message, owner, aadhar);
 
         return surroundWithBraces(joinWithComma(genesis));
     }
 
 
-    public String createGenesisBlock(String publicKey, String privateKey, String message, String owner, String aadhar) throws Exception {
-        return createBlock(publicKey, privateKey, message, owner, aadhar, "");
+    public String createGenesisBlock(Keyz key, String message, String owner, String aadhar) throws Exception {
+        return createBlock(key, message, owner, aadhar, "");
     }
 
-    public String createBlock(String publicKey, String privateKey, String message, String owner, String aadhar, String previousHash) throws Exception {
-        String sign = sign(privateKey, message + owner + aadhar + previousHash);
+    public String createBlock(Keyz key, String message, String owner, String aadhar, String previousHash) throws Exception {
+        String sign = signService.sign(key.privateKeyz, message + owner + aadhar + previousHash);
 
         //System.out.println(verify(message + owner + aadhar + previousHash, publicKey, sign));
 
@@ -91,30 +90,6 @@ public class CryptoUtils {
         return block.split("\"" + field + "\":\"")[1].split("\"")[0];
     }
 
-
-
-
-    private String sign(PrivateKey privateKey, String message) throws Exception {
-        Signature dsa = Signature.getInstance("SHA1withECDSA");
-        dsa.initSign(privateKey);
-        dsa.update(message.getBytes("UTF-8"));
-        return new BigInteger(1, dsa.sign()).toString(16);
-    }
-
-    private String sign(String privKey, String message) throws Exception {
-        return sign(Keyz.decodePrivateKeyFromString(privKey), message);
-    }
-
-    private boolean verify(String blockMessage, PublicKey publicKey, String sign) throws Exception {
-        Signature dsa = Signature.getInstance("SHA1withECDSA");
-        dsa.initVerify(publicKey);
-        dsa.update(blockMessage.getBytes("UTF-8"));
-        return dsa.verify(DatatypeConverter.parseHexBinary(sign));
-    }
-
-    public boolean verify(String blockMessage, String pubKey, String sign) throws Exception {
-        return verify(blockMessage, Keyz.decodePublicKeyFromString(pubKey), sign);
-    }
 
 
 }

@@ -55,7 +55,7 @@ public class CryptoService {
 
         while (i < 1000000) {
             i = i + 1;
-            block = cryptoUtils.createBlock(keysDev.publicKey, keysDev.privateKey, message + "nonce:" + i, owner, aadhar, prevHash);
+            block = cryptoUtils.createBlock(keysDev, message + "nonce:" + i, owner, aadhar, prevHash);
             String sign = block.split(":")[0].substring(1).split("\"")[0];
             int siglen = sign.length();
 
@@ -91,7 +91,7 @@ public class CryptoService {
         List<String> blocks = cryptoUtils.getBlocks(blockFile);
 
         String genesis = blocks.get(0);
-        boolean isValid = cryptoUtils.verify(cryptoUtils.extract(messageKey, genesis) + cryptoUtils.extract(ownerKey, genesis) + cryptoUtils.extract(aadharKey, genesis),
+        boolean isValid = SignService.verify(cryptoUtils.extract(messageKey, genesis) + cryptoUtils.extract(ownerKey, genesis) + cryptoUtils.extract(aadharKey, genesis),
                 keysMiner.publicKey, cryptoUtils.extractSignature(genesis));
 
         for (int i = 1; i < blocks.size(); i++) {
@@ -106,12 +106,9 @@ public class CryptoService {
         return String.valueOf(isValid);
     }
 
-    public boolean verify(String data, String pubkey, String sign) throws Exception {
-        return cryptoUtils.verify(data, pubkey, sign);
-    }
 
     public String showGenesis(String message, String owner, String aadhar) throws Exception {
-        return cryptoUtils.createGenesisBlock(keysDev.publicKey, keysDev.privateKey, message, owner, aadhar);
+        return cryptoUtils.createGenesisBlock(keysDev, message, owner, aadhar);
     }
 
     public String generateKeyString() throws Exception {
