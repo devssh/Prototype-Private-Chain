@@ -53,6 +53,6 @@ public class KeyzManager {
     }
 
     public void writeKey(String owner) {
-
+        //TODO: Using Keyz.generateKey
     }
 }

@@ -15,6 +15,8 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.util.List;
 
+import static app.model.StringVar.*;
+
 public class CryptoUtils {
     String messageKey="message";
     String ownerKey="owner";
@@ -58,7 +60,7 @@ public class CryptoUtils {
 
         String genesis = createGenesisBlock(keysMiner.publicKey, keysMiner.privateKey, message, owner, aadhar);
 
-        return surroundWithBraces(addComma(genesis));
+        return surroundWithBraces(joinWithComma(genesis));
     }
 
 
@@ -75,7 +77,7 @@ public class CryptoUtils {
     }
 
     private String blockFormat(String sign, String message, String owner, String aadhar) {
-        return "\"" + sign + "\":" + surroundWithBraces(addComma(keyValuePair(messageKey, message), keyValuePair(ownerKey, owner),
+        return "\"" + sign + "\":" + surroundWithBraces(joinWithComma(keyValuePair(messageKey, message), keyValuePair(ownerKey, owner),
                 keyValuePair(aadharKey, aadhar)));
     }
 
@@ -89,33 +91,6 @@ public class CryptoUtils {
         return block.split("\"" + field + "\":\"")[1].split("\"")[0];
     }
 
-    public String surroundWithBraces(String value) {
-        return "{" + value + "}";
-    }
-
-    public String addComma(String... values) {
-        return String.join(",", values);
-    }
-
-    public String addComma(List<String> values) {
-        return addComma(values.toArray(new String[0]));
-    }
-
-    public String superKeyValuePair(String key, String value) {
-        return "\"" + key + "\":{" + value + "}";
-    }
-
-    public String keyValuePair(String key, String value) {
-        return keyValuePair(key, value, true);
-    }
-
-    private String keyValuePair(String key, String value, boolean noBraces) {
-        if (noBraces) {
-            return "\"" + key + "\":\"" + value + "\"";
-        }
-
-        return surroundWithBraces(key + ":" + value);
-    }
 
 
 

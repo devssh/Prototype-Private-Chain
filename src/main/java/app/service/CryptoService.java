@@ -5,6 +5,8 @@ import app.utils.CryptoUtils;
 
 import java.util.List;
 
+import static app.model.StringVar.*;
+
 public class CryptoService {
     String messageKey = "message";
     String ownerKey = "owner";
@@ -36,7 +38,7 @@ public class CryptoService {
     public String getBlockchain() throws Exception {
         List<String> blocks = cryptoUtils.getBlocks(blockFile);
 
-        return cryptoUtils.surroundWithBraces(cryptoUtils.addComma(blocks));
+        return surroundWithBraces(joinWithComma(blocks));
     }
 
     public String addBlock(String message, String owner, String aadhar) throws Exception {
@@ -77,10 +79,10 @@ public class CryptoService {
     }
 
     public String showAuthorized() throws Exception {
-        return cryptoUtils.surroundWithBraces(cryptoUtils.addComma(
-                cryptoUtils.superKeyValuePair(keysMiner.owner, cryptoUtils.keyValuePair("publicKey", keysMiner.publicKey)),
-                cryptoUtils.superKeyValuePair(keysDev.owner, cryptoUtils.keyValuePair("publicKey", keysDev.publicKey)),
-                cryptoUtils.superKeyValuePair(keysRajiv.owner, cryptoUtils.keyValuePair("publicKey", keysRajiv.publicKey))
+        return surroundWithBraces(joinWithComma(
+                superKeyValuePair(keysMiner.owner, keyValuePair("publicKey", keysMiner.publicKey)),
+                superKeyValuePair(keysDev.owner, keyValuePair("publicKey", keysDev.publicKey)),
+                superKeyValuePair(keysRajiv.owner, keyValuePair("publicKey", keysRajiv.publicKey))
         ));
     }
 
