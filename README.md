@@ -1,4 +1,4 @@
-# Prototype chain on Java, just to demonstrate hashing and signature verification
+# Prototype blockchain on Java, to demonstrate signature verification and Proof of Work
 There is clubbing of transactions in a block. The purpose is to verify signatures signed by authorities and mined using Proof of Work at difficulty 3.
 
 ## To run the demo on JDK8
