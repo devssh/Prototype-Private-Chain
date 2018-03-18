@@ -27,7 +27,7 @@ public class CryptoUtils {
     }
 
     public boolean isValid(String block, String previousHash, String publicKey) throws Exception {
-        return signService.verify(extract(messageKey, block)
+        return SignService.verify(extract(messageKey, block)
                         + extract(ownerKey, block)
                         + extract(aadharKey, block)
                         + previousHash,

@@ -3,6 +3,7 @@ package app.service;
 import app.model.Keyz;
 import app.utils.CryptoUtils;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static app.model.StringVar.*;
@@ -41,7 +42,7 @@ public class CryptoService {
         return surroundWithBraces(joinWithComma(blocks));
     }
 
-    public String addBlock(String message, String owner, String aadhar) throws Exception {
+    public HashMap<String, String> addBlock(String message, String owner, String aadhar) throws Exception {
         List<String> blocks = cryptoUtils.getBlocks(blockFile);
 
         String prevHash = cryptoUtils.extractSignature(blocks.get(blocks.size() - 1));
@@ -53,10 +54,12 @@ public class CryptoService {
             expectedDifficulty = expectedDifficulty + difficultyCharacter;
         }
 
+        String sign = "";
+
         while (i < 1000000) {
             i = i + 1;
             block = cryptoUtils.createBlock(keysDev, message + "nonce:" + i, owner, aadhar, prevHash);
-            String sign = block.split(":")[0].substring(1).split("\"")[0];
+            sign = block.split(":")[0].substring(1).split("\"")[0];
             int siglen = sign.length();
 
             if (sign.substring(siglen - difficulty, siglen).equals(expectedDifficulty)) {
@@ -73,7 +76,13 @@ public class CryptoService {
             return addBlock(message, owner, aadhar);
         } else {
             cryptoUtils.appendBlocks(blockFile, block);
-            return "Blockdata: " + message + "nonce:" + i + owner + aadhar + prevHash + " \nPublicKey: " + keysDev.publicKey;
+            final int nonce = i;
+            final String signature = sign;
+            return new HashMap<String, String>() {{
+                put("Signature", signature);
+                put("Blockdata", message + "nonce:" + nonce + owner + aadhar + prevHash);
+                put("Public Key", keysDev.publicKey);
+            }};
         }
 
     }
