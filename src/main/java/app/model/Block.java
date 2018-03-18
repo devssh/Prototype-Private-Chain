@@ -1,32 +1,66 @@
 package app.model;
 
-import app.service.KeyzManager;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import static app.model.StringVar.*;
+import static app.service.SignService.Sign;
 
 public class Block {
     final VariableManager varMan;
-    final KeyzManager keyzManager;
-    final String sign;
-    final Chunk chunk;
+    public final String sign;
+    public final Chunk chunk;
 
-    public Block(KeyzManager keyzManager, String nonce, String sign, String signedBy, String prevHash, String createdAt, Txn... txns) throws Exception {
-        this.keyzManager = keyzManager;
-        Keyz key = keyzManager.getKey(signedBy);
-
+    Block(String sign, String nonce, String publicKey, String prevHash, Txn... txns) throws Exception {
         this.varMan = new VariableManager(
                 "nonce", nonce,
-                "signedBy", signedBy,
-                "publicKey", key.publicKey,
+                "publicKey", publicKey,
                 "prevHash", prevHash,
-                "createdAt", createdAt,
-                "data", surroundWithBraces(joinWithComma(Arrays.stream(txns).map(Txn::toString).collect(Collectors.toList())), "square")
+                "data", Txn.Serialize(txns)
         );
         this.sign = sign;
-        this.chunk = new Chunk(sign, key.publicKey, joinWith("", Arrays.stream(txns).map(txn -> txn.sign).collect(Collectors.toList())));
+        this.chunk = new Chunk(sign, publicKey, JoinWith("", nonce, publicKey, prevHash, Txn.SerializeForSign(txns)));
+    }
+
+    public Block(Keyz key, String prevHash, Txn... txns) throws Exception {
+        //TODO: Extract the mining logic
+        int difficulty = 3;
+        String difficultyCharacter = "0";
+
+        int i = -1;
+        String block = "";
+        String expectedDifficulty = "";
+        for (int j = 0; j < difficulty; j++) {
+            expectedDifficulty = expectedDifficulty + difficultyCharacter;
+        }
+
+        String sign = "", data = "";
+
+        while (i < 1000000) {
+            i = i + 1;
+            data = JoinWith("", String.valueOf(i), key.publicKey, prevHash, Txn.SerializeForSign(txns));
+            sign = Sign(key.privateKey, data);
+            int siglen = sign.length();
+
+            if (sign.substring(siglen - difficulty, siglen).equals(expectedDifficulty)) {
+                break;
+            }
+        }
+        this.varMan = new VariableManager(
+            "nonce", String.valueOf(i),
+            "publicKey", key.publicKey,
+            "prevHash", prevHash,
+            "data", Txn.Serialize(txns)
+        );
+        this.sign = sign;
+        this.chunk = new Chunk(sign, key.publicKey, data);
+        //TODO: handle orphans and concurrent issue
+    }
+
+    public static Block Deserialize(String block) throws Exception {
+        String sign = StripQuotes(block.split(":")[0]);
+        String nonce = extractStringKeyFromJson("nonce", block);
+        String publicKey = extractStringKeyFromJson("publicKey", block);
+        String prevHash = extractStringKeyFromJson("prevHash", block);
+        Txn[] txns = Txn.Deserialize(extractArrayKeyFromJson("data", block));
+        return new Block(sign, nonce, publicKey, prevHash, txns);
     }
 
     @Override

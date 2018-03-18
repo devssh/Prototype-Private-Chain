@@ -14,7 +14,7 @@ public class StringVar {
         this.value = value;
     }
 
-    public static List<StringVar> vars(String... variables) {
+    public static List<StringVar> Vars(String... variables) {
         return new ArrayList<StringVar>() {{
             for (int i = 0; i < variables.length; i = i + 2) {
                 add(new StringVar(variables[i], variables[i + 1]));
@@ -22,7 +22,7 @@ public class StringVar {
         }};
     }
 
-    public static Map<String, String> maps(String... variables) {
+    public static Map<String, String> Maps(String... variables) {
         return new HashMap<String, String>() {{
             for (int i = 0; i < variables.length; i = i + 2) {
                 put(variables[i], variables[i + 1]);
@@ -30,55 +30,78 @@ public class StringVar {
         }};
     }
 
-    public static String surroundWithBraces(String value) {
-        return surroundWithBraces(value, "curly");
+    public static String SurroundWithBraces(String value) {
+        return SurroundWithBraces(value, "curly");
     }
 
-    public static String surroundWithBraces(String value, String type) {
+    public static String SurroundWithBraces(String value, String type) {
         if (type.equals("square")) {
             return "[" + value + "]";
         }
         return "{" + value + "}";
     }
 
-    public static String joinWith(String delim, String... values) {
+    public static String JoinWith(String delim, String... values) {
         return String.join(delim, values);
     }
 
-    public static String joinWith(String delim, List<String> values) {
-        return joinWith(delim, values.toArray(new String[0]));
+    public static String JoinWith(String delim, List<String> values) {
+        return JoinWith(delim, values.toArray(new String[0]));
     }
 
-    public static String joinWithComma(String... values) {
-        return joinWith(",", values);
+    public static String JoinWithComma(String... values) {
+        return JoinWith(",", values);
     }
 
-    public static String joinWithComma(List<String> values) {
-        return joinWith(",", values);
+    public static String JoinWithComma(List<String> values) {
+        return JoinWith(",", values);
     }
 
-    public static String superKeyValuePair(String key, String value) {
+    public static String SuperKeyValuePair(String key, String value) {
         return "\"" + key + "\":{" + value + "}";
     }
 
-    public static String keyValuePair(String key, String value) {
-        return keyValuePair(key, value, true);
+    public static String KeyValuePair(String key, String value) {
+        return KeyValuePair(key, value, true);
     }
 
-    public static String keyValuePair(StringVar var) {
-        return keyValuePair(var, true);
+    public static String KeyValuePair(StringVar var) {
+        return KeyValuePair(var, true);
     }
 
-    private static String keyValuePair(StringVar var, boolean noBraces) {
-        return keyValuePair(var.name, var.value, noBraces);
+    private static String KeyValuePair(StringVar var, boolean noBraces) {
+        return KeyValuePair(var.name, var.value, noBraces);
     }
 
-    private static String keyValuePair(String key, String value, boolean noBraces) {
+    private static String KeyValuePair(String key, String value, boolean noBraces) {
         if (noBraces) {
             return "\"" + key + "\":\"" + value + "\"";
         }
 
-        return surroundWithBraces(key + ":" + value);
+        return SurroundWithBraces(key + ":" + value);
+    }
+
+    public static String StripFirstAndLast(String text) {
+        return text.substring(1,text.length()-1);
+    }
+
+    public static String StripQuotes(String text) {
+        return StripFirstAndLast(text);
+    }
+
+    public static String StripSquareBraces(String text) {
+        return StripFirstAndLast(text);
+    }
+
+    public static String StripBraces(String text) {
+        return StripFirstAndLast(text);
+    }
+
+    public static String extractStringKeyFromJson(String key, String json) {
+        return json.split("\""+key+"\":\"", 1)[1].split("\"", 1)[0];
+    }
+    public static String extractArrayKeyFromJson(String key, String json) {
+        return SurroundWithBraces(json.split("\""+key+"\":[", 1)[1].split("]", 1)[0], "square");
     }
 
 }

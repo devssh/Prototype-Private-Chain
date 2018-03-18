@@ -13,12 +13,12 @@ public class VariableManager {
     final Map<String, String> fieldMap = new HashMap<>();
 
     VariableManager(String... keyValues) {
-        this.fields.addAll(vars(keyValues));
-        this.fieldMap.putAll(maps(keyValues));
+        this.fields.addAll(Vars(keyValues));
+        this.fieldMap.putAll(Maps(keyValues));
     }
 
     public String jsonString() {
-        return surroundWithBraces(joinWithComma(fields.stream().map(x -> keyValuePair(x)).collect(Collectors.toList())));
+        return SurroundWithBraces(JoinWithComma(fields.stream().map(x -> KeyValuePair(x)).collect(Collectors.toList())));
     }
 
     public String get(String varName) {

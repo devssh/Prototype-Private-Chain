@@ -3,9 +3,9 @@ package app.model;
 import app.service.SignService;
 
 public class Chunk {
-    private final String sign;
-    private final String publicKey;
-    private final String data;
+    public final String sign;
+    public final String publicKey;
+    public final String data;
 
     public Chunk(String sign, String publicKey, String data) {
         this.sign = sign;
@@ -14,13 +14,13 @@ public class Chunk {
     }
 
     public boolean verify() throws Exception {
-        return SignService.verify(data, publicKey, sign);
+        return SignService.Verify(data, publicKey, sign);
     }
 
     @Override
     public String toString() {
         return "Chunk{" +
-                "sign='" + sign + '\'' +
+                "Sign='" + sign + '\'' +
                 ", publicKey='" + publicKey + '\'' +
                 ", data='" + data + '\'' +
                 '}';

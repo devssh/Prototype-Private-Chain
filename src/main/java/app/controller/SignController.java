@@ -30,7 +30,7 @@ public class SignController {
 
         dsa.initSign(priv);
 
-        String str = "This is string to sign";
+        String str = "This is string to Sign";
         byte[] strByte = str.getBytes("UTF-8");
         dsa.update(strByte);
 
@@ -46,7 +46,7 @@ public class SignController {
 
         dsa2.initVerify(pub);
         dsa2.update(strByte);
-        //return dsa2.verify(realSig);
+        //return dsa2.Verify(realSig);
         return dsa2.verify(DatatypeConverter.parseHexBinary(signature));
     }
 

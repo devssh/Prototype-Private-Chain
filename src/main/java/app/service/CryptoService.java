@@ -1,7 +1,9 @@
 package app.service;
 
+import app.model.Block;
 import app.model.Keyz;
-import app.utils.CryptoUtils;
+import app.model.Txn;
+import app.utils.BlockManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,92 +25,67 @@ public class CryptoService {
             keysDev,
             keysRajiv;
 
-    public KeyzManager keyzManager;
-    CryptoUtils cryptoUtils;
+    public KeyzManager authoritiesManager, usersManager;
+    BlockManager blockManager;
 
-    public CryptoService(String keyFile, String blockFile) throws Exception {
-        this.keyzManager = new KeyzManager(keyFile);
-        this.cryptoUtils = new CryptoUtils(keyzManager);
+    public CryptoService(String authoritiesFile, String usersFile, String blockFile) throws Exception {
+        this.authoritiesManager = new KeyzManager(authoritiesFile);
+        this.usersManager = new KeyzManager(usersFile);
+        this.blockManager = new BlockManager(authoritiesManager, usersManager);
         this.blockFile = blockFile;
-        this.keysMiner = keyzManager.getKey("Miner");
-        this.keysDev = keyzManager.getKey("Dev");
-        this.keysRajiv = keyzManager.getKey("Rajiv");
+        this.keysMiner = authoritiesManager.getKey("Miner");
+        this.keysDev = authoritiesManager.getKey("Dev");
+        this.keysRajiv = authoritiesManager.getKey("Rajiv");
     }
 
 
     public String getBlockchain() throws Exception {
-        List<String> blocks = cryptoUtils.getBlocks(blockFile);
+        List<String> blocks = blockManager.getBlocks(blockFile);
 
-        return surroundWithBraces(joinWithComma(blocks));
+        return SurroundWithBraces(JoinWithComma(blocks));
     }
 
-    public HashMap<String, String> addBlock(String message, String owner, String aadhar) throws Exception {
-        List<String> blocks = cryptoUtils.getBlocks(blockFile);
+    public Block addBlock(Txn txn, String signedBy) throws Exception {
+        List<String> blocks = blockManager.getBlocks(blockFile);
+        String prevHash = blockManager.extractSignature(blocks.get(blocks.size() - 1));
 
-        String prevHash = cryptoUtils.extractSignature(blocks.get(blocks.size() - 1));
+        Block block = new Block(authoritiesManager.getKey(signedBy), prevHash, txn);
 
-        int i = -1;
-        String block = "";
-        String expectedDifficulty = "";
-        for (int j = 0; j < difficulty; j++) {
-            expectedDifficulty = expectedDifficulty + difficultyCharacter;
-        }
-
-        String sign = "";
-
-        while (i < 1000000) {
-            i = i + 1;
-            block = cryptoUtils.createBlock(keysDev, message + "nonce:" + i, owner, aadhar, prevHash);
-            sign = block.split(":")[0].substring(1).split("\"")[0];
-            int siglen = sign.length();
-
-            if (sign.substring(siglen - difficulty, siglen).equals(expectedDifficulty)) {
-                break;
-            }
-        }
-
-        List<String> newBlocks = cryptoUtils.getBlocks(blockFile);
-        String newPrevHash = cryptoUtils.extractSignature(newBlocks.get(newBlocks.size() - 1));
+        List<String> newBlocks = blockManager.getBlocks(blockFile);
+        String newPrevHash = blockManager.extractSignature(newBlocks.get(newBlocks.size() - 1));
 
 
         if (!newPrevHash.equals(prevHash)) {
-            System.out.println("here");
-            return addBlock(message, owner, aadhar);
+            return addBlock(txn, signedBy);
         } else {
-            cryptoUtils.appendBlocks(blockFile, block);
-            final int nonce = i;
-            final String signature = sign;
-            return new HashMap<String, String>() {{
-                put("Signature", signature);
-                put("Blockdata", message + "nonce:" + nonce + owner + aadhar + prevHash);
-                put("Public Key", keysDev.publicKey);
-            }};
+            blockManager.appendBlocks(blockFile, block.toString());
+            return block;
         }
 
     }
 
     public String showAuthorized() throws Exception {
-        return surroundWithBraces(joinWithComma(
-                superKeyValuePair(keysMiner.owner, keyValuePair("publicKey", keysMiner.publicKey)),
-                superKeyValuePair(keysDev.owner, keyValuePair("publicKey", keysDev.publicKey)),
-                superKeyValuePair(keysRajiv.owner, keyValuePair("publicKey", keysRajiv.publicKey))
+        return SurroundWithBraces(JoinWithComma(
+                SuperKeyValuePair(keysMiner.owner, KeyValuePair("publicKey", keysMiner.publicKey)),
+                SuperKeyValuePair(keysDev.owner, KeyValuePair("publicKey", keysDev.publicKey)),
+                SuperKeyValuePair(keysRajiv.owner, KeyValuePair("publicKey", keysRajiv.publicKey))
         ));
     }
 
 
     public String verifyAllSignatures() throws Exception {
-        List<String> blocks = cryptoUtils.getBlocks(blockFile);
+        List<String> blocks = blockManager.getBlocks(blockFile);
 
         String genesis = blocks.get(0);
-        boolean isValid = SignService.verify(cryptoUtils.extract(messageKey, genesis) + cryptoUtils.extract(ownerKey, genesis) + cryptoUtils.extract(aadharKey, genesis),
-                keysMiner.publicKey, cryptoUtils.extractSignature(genesis));
+        boolean isValid = SignService.Verify(blockManager.extract(messageKey, genesis) + blockManager.extract(ownerKey, genesis) + blockManager.extract(aadharKey, genesis),
+                keysMiner.publicKey, blockManager.extractSignature(genesis));
 
         for (int i = 1; i < blocks.size(); i++) {
             String block = blocks.get(i);
-            String previousHash = cryptoUtils.extractSignature(blocks.get(i - 1));
-            isValid = isValid & (cryptoUtils.isValid(block, previousHash, keysMiner.publicKey) |
-                    cryptoUtils.isValid(block, previousHash, keysDev.publicKey) |
-                    cryptoUtils.isValid(block, previousHash, keysRajiv.publicKey)
+            String previousHash = blockManager.extractSignature(blocks.get(i - 1));
+            isValid = isValid & (blockManager.isValid(block, previousHash, keysMiner.publicKey) |
+                    blockManager.isValid(block, previousHash, keysDev.publicKey) |
+                    blockManager.isValid(block, previousHash, keysRajiv.publicKey)
             );
         }
 
@@ -117,7 +94,7 @@ public class CryptoService {
 
 
     public String showGenesis(String message, String owner, String aadhar) throws Exception {
-        return cryptoUtils.createGenesisBlock(keysDev, message, owner, aadhar);
+        return blockManager.createGenesisBlock(keysDev, message, owner, aadhar);
     }
 
     public String generateKeyString() throws Exception {

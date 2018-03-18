@@ -10,19 +10,21 @@ import java.util.stream.Collectors;
 
 public class KeyzManager {
     List<Keyz> keyz;
-    public final String keyFile;
+    public final String[] keyFiles;
 
-    public KeyzManager(String keyFile) throws Exception {
-        this.keyFile = keyFile;
+    public KeyzManager(String... keyFiles) throws Exception {
+        this.keyFiles = keyFiles;
         keyz = getKeys(true);
     }
 
     private List<Keyz> getKeys(boolean eager) throws Exception {
         if (eager) {
-            List<String> keyStrings = Files.readAllLines(Paths.get(keyFile));
             List<Keyz> keys = new ArrayList<>();
-            for (int i = 0; i < keyStrings.size(); i = i + 3) {
-                keys.add(new Keyz(keyStrings.get(i), keyStrings.get(i + 1), keyStrings.get(i + 2)));
+            for (String keyFile : keyFiles) {
+                List<String> keyStrings = Files.readAllLines(Paths.get(keyFile));
+                for (int i = 0; i < keyStrings.size(); i = i + 3) {
+                    keys.add(new Keyz(keyStrings.get(i), keyStrings.get(i + 1), keyStrings.get(i + 2)));
+                }
             }
             return keys;
         }
