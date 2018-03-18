@@ -1,25 +1,29 @@
 package app.utils;
 
-import javafx.util.Pair;
+import app.model.Keyz;
+import app.service.KeyzManager;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.util.List;
 
 public class CryptoUtils {
     String messageKey="message";
     String ownerKey="owner";
     String aadharKey="aadhar";
+    KeyzManager keyzManager;
+
+    public CryptoUtils(KeyzManager keyzManager) throws Exception {
+        this.keyzManager = keyzManager;
+    }
 
     public boolean isValid(String block, String previousHash, String publicKey) throws Exception {
         return verify(extract(messageKey, block)
@@ -32,6 +36,7 @@ public class CryptoUtils {
     public List<String> getBlocks(String blockFile) throws Exception {
         return Files.readAllLines(Paths.get(blockFile));
     }
+
 
     public List<String> appendBlocks(String blockFile, String... blocks) throws Exception {
         Writer output = new BufferedWriter(new FileWriter(blockFile, true));
@@ -47,12 +52,11 @@ public class CryptoUtils {
 
 
     public String initBlockchain(String keyFile, String message, String owner, String aadhar) throws Exception {
-        List<String> keys = Files.readAllLines(Paths.get(keyFile));
-        Pair<String, String> keysMiner = new Pair<>(keys.get(0), keys.get(1)),
-                keysDev = new Pair<>(keys.get(2), keys.get(3)),
-                keysRajiv = new Pair<>(keys.get(4), keys.get(5));
+        Keyz keysMiner = keyzManager.getKey("Miner"),
+                keysDev = keyzManager.getKey("Dev"),
+                keysRajiv = keyzManager.getKey("Rajiv");
 
-        String genesis = createGenesisBlock(keysMiner.getKey(), keysMiner.getValue(), message, owner, aadhar);
+        String genesis = createGenesisBlock(keysMiner.publicKey, keysMiner.privateKey, message, owner, aadhar);
 
         return surroundWithBraces(addComma(genesis));
     }
@@ -113,19 +117,7 @@ public class CryptoUtils {
         return surroundWithBraces(key + ":" + value);
     }
 
-    public Pair<PublicKey, PrivateKey> generateKeys() throws Exception {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-        //TODO: Use TRNG somehow
-        SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
 
-        keyGen.initialize(256, random);
-
-        KeyPair pair = keyGen.generateKeyPair();
-        PublicKey pub = pair.getPublic();
-        PrivateKey priv = pair.getPrivate();
-
-        return new Pair<>(pub, priv);
-    }
 
     private String sign(PrivateKey privateKey, String message) throws Exception {
         Signature dsa = Signature.getInstance("SHA1withECDSA");
@@ -134,8 +126,8 @@ public class CryptoUtils {
         return new BigInteger(1, dsa.sign()).toString(16);
     }
 
-    public String sign(String privKey, String message) throws Exception {
-        return sign(decodePrivateKeyFromString(privKey), message);
+    private String sign(String privKey, String message) throws Exception {
+        return sign(Keyz.decodePrivateKeyFromString(privKey), message);
     }
 
     private boolean verify(String blockMessage, PublicKey publicKey, String sign) throws Exception {
@@ -146,25 +138,8 @@ public class CryptoUtils {
     }
 
     public boolean verify(String blockMessage, String pubKey, String sign) throws Exception {
-        return verify(blockMessage, decodePublicKeyFromString(pubKey), sign);
+        return verify(blockMessage, Keyz.decodePublicKeyFromString(pubKey), sign);
     }
 
-    public String encodeKeyToString(Key key) {
-        return Base64.getEncoder().encodeToString(key.getEncoded());
-    }
-
-    private PublicKey decodePublicKeyFromString(String key) throws Exception {
-        KeyFactory fact = KeyFactory.getInstance("EC");
-        return fact.generatePublic(new X509EncodedKeySpec(decodeKeyFromString(key)));
-    }
-
-    private PrivateKey decodePrivateKeyFromString(String key) throws Exception {
-        KeyFactory fact = KeyFactory.getInstance("EC");
-        return fact.generatePrivate(new PKCS8EncodedKeySpec(decodeKeyFromString(key)));
-    }
-
-    private byte[] decodeKeyFromString(String key) throws UnsupportedEncodingException {
-        return Base64.getDecoder().decode(key.getBytes("UTF-8"));
-    }
 
 }

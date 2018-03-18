@@ -6,12 +6,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Timer;
-//import java.util.TimerTask;
-
 @RestController
 public class BlockchainController {
-    Timer timer = new Timer();
 
     CryptoService cryptoService = new CryptoService("keys.dat", "blocks.dat");
     String messageKey = "message";
@@ -21,12 +17,6 @@ public class BlockchainController {
     public String basicSign = "MFkwEw";
 
     public BlockchainController() throws Exception {
-//        timer.scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                System.out.println("Hello");
-//            }
-//        }, 1000, 1000);
     }
 
     @GetMapping(value = "/coupons-explorer", produces = "application/json")
