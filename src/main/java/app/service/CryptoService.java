@@ -15,7 +15,7 @@ public class CryptoService {
     String ownerKey = "owner";
     String aadharKey = "aadhar";
     int difficulty = 3;
-    String difficultyCharacter="0";
+    String difficultyCharacter = "0";
 
 
     String keyFile;
@@ -54,26 +54,35 @@ public class CryptoService {
         String prevHash = cryptoUtils.extractSignature(blocks.get(blocks.size() - 1));
 
         int i = -1;
-        String block="";
-        while (i < 100000) {
+        String block = "";
+        String expectedDifficulty = "";
+        for (int j = 0; j < difficulty; j++) {
+            expectedDifficulty = expectedDifficulty + difficultyCharacter;
+        }
+
+        while (i < 1000000) {
             i = i + 1;
             block = cryptoUtils.createBlock(keysDev.getKey(), keysDev.getValue(), message + "nonce:" + i, owner, aadhar, prevHash);
             String sign = block.split(":")[0].substring(1).split("\"")[0];
             int siglen = sign.length();
 
-            String expectedDifficulty = "";
-            for (int j = 0; j < difficulty; j++) {
-                expectedDifficulty = expectedDifficulty + difficultyCharacter;
-            }
             if (sign.substring(siglen - difficulty, siglen).equals(expectedDifficulty)) {
-
-                cryptoUtils.appendBlocks(blockFile, block);
                 break;
             }
-
         }
 
-        return "Blockdata: " + message + "nonce:" + i + owner + aadhar + prevHash + " \nPublicKey: " + keysDev.getKey();
+        List<String> newBlocks = cryptoUtils.getBlocks(blockFile);
+        String newPrevHash = cryptoUtils.extractSignature(newBlocks.get(newBlocks.size() - 1));
+
+
+        if (!newPrevHash.equals(prevHash)) {
+            System.out.println("here");
+            return addBlock(message, owner, aadhar);
+        } else {
+            cryptoUtils.appendBlocks(blockFile, block);
+            return "Blockdata: " + message + "nonce:" + i + owner + aadhar + prevHash + " \nPublicKey: " + keysDev.getKey();
+        }
+
     }
 
     public String showAuthorized() throws Exception {
@@ -116,5 +125,12 @@ public class CryptoService {
         Pair<PublicKey, PrivateKey> key = cryptoUtils.generateKeys();
         return "Public Key: " + cryptoUtils.encodeKeyToString(key.getKey()) +
                 "\nPrivate Key: " + cryptoUtils.encodeKeyToString(key.getValue());
+    }
+
+    public String getStats() {
+        return "Difficulty: " + difficulty +
+                "\nHashRate: 1GH/Sec" +
+                "\nCost per transaction(block): $0.00038"+
+                "\nBlock Time: 5 seconds on average";
     }
 }

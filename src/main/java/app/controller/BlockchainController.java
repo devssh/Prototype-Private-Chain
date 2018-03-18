@@ -6,10 +6,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+//import java.util.TimerTask;
 
 @RestController
 public class BlockchainController {
+    Timer timer = new Timer();
+
     CryptoService cryptoService = new CryptoService("keys.dat", "blocks.dat");
     String messageKey = "message";
     String ownerKey = "owner";
@@ -18,7 +21,12 @@ public class BlockchainController {
     public String basicSign = "MFkwEw";
 
     public BlockchainController() throws Exception {
-
+//        timer.scheduleAtFixedRate(new TimerTask() {
+//            @Override
+//            public void run() {
+//                System.out.println("Hello");
+//            }
+//        }, 1000, 1000);
     }
 
     @GetMapping(value = "/coupons-explorer", produces = "application/json")
@@ -76,6 +84,11 @@ public class BlockchainController {
     @GetMapping(value = "/generateKey")
     public String generateKey() throws Exception {
         return cryptoService.generateKeyString();
+    }
+
+    @GetMapping(value = "/stats")
+    public String getStats() throws Exception {
+        return cryptoService.getStats();
     }
 
 
