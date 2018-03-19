@@ -1,5 +1,7 @@
 package app.model;
 
+import java.util.Arrays;
+
 import static app.model.StringVar.*;
 import static app.service.SignService.Sign;
 

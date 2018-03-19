@@ -26,9 +26,12 @@ public class Txn {
     }
 
     public static Txn[] Deserialize(String txns) {
-        return Arrays.stream(StripSquareBraces(txns).split(",")).map(txnString -> {
-            String txn = StripBraces(txnString);
+        String[] txnStrings = StripSquareBraces(txns).split("\\{");
+        return Arrays.stream(Arrays.copyOfRange(txnStrings, 1, txnStrings.length)).map(txnString -> {
+            String txn = txnString.split("}", 2)[0];
+            System.out.println("------------hola"+txnString);
             String sign = extractStringKeyFromJson("sign", txn);
+            System.out.println("HO2");
             String publicKey = extractStringKeyFromJson("publicKey", txn);
             String txnid = extractStringKeyFromJson("txnid", txn);
             String email = extractStringKeyFromJson("email", txn);

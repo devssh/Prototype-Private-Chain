@@ -54,8 +54,23 @@ public class BlockchainController {
         return "Invalid signature for Dev";
     }
 
+    @PostMapping(value = "/create-api")
+    public String addBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
+        TxnDao txnDao = new TxnDao(txnid, email, location);
+        if (sign.equals(basicSign)) {
+            Long start = System.currentTimeMillis();
+            Block block = cryptoService.addBlock(txnDao.getTxn("Sharath", signService), "Dev");
+            return new VariableManager(
+                    "sign", block.sign,
+                    "data", block.chunk.data,
+                    "pubKey", block.chunk.publicKey,
+                    "mineTime", String.valueOf(System.currentTimeMillis() - start) + "ms").jsonString();
+        }
+        return "Invalid signature for Dev";
+    }
+
     @GetMapping(value = "/create")
-    public String createBlock(@RequestParam Optional<String> sign,@RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) throws Exception {
+    public String createBlock(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) throws Exception {
         return "<form action=\"create\" method=\"post\">" +
                 "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
                 "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
@@ -98,19 +113,10 @@ public class BlockchainController {
 
     @GetMapping(value = "/verify")
     public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> pubKey) {
-        if (sign.equals(Optional.empty())) {
-            sign = Optional.of("");
-        }
-        if (data.equals(Optional.empty())) {
-            data = Optional.of("");
-        }
-        if (pubKey.equals(Optional.empty())) {
-            pubKey = Optional.of("");
-        }
         return "<form action=\"Verify\" method=\"post\">" +
-                "Signature: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.get().trim() + "\"/><br/><br/>" +
-                "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.get().trim() + "\"/><br/><br/>" +
-                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.get().trim() + "\"/><br/><br/>" +
+                "Signature: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.orElse("").trim() + "\"/><br/><br/>" +
+                "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.orElse("").trim() + "\"/><br/><br/>" +
+                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.orElse("").trim() + "\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
                 "</form>";
     }

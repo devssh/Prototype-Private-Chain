@@ -105,10 +105,10 @@ public class StringVar {
     }
 
     public static String extractStringKeyFromJson(String key, String json) {
-        return json.split("\""+key+"\":\"", 1)[1].split("\"", 1)[0];
+        return json.split("\""+key+"\":\"", 2)[1].split("\"", 2)[0];
     }
     public static String extractArrayKeyFromJson(String key, String json) {
-        return SurroundWithBraces(json.split("\""+key+"\":[", 1)[1].split("]", 1)[0], "square");
+        return SurroundWithBraces(json.split("\""+key+"\":\\[", 2)[1].split("]", 2)[0], "square");
     }
 
 }
