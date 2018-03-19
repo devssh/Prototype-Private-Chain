@@ -29,18 +29,12 @@ public class BlockchainController {
     }
 
     @PostMapping(value = "/create")
-    public String addBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
+    public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
         TxnDao txnDao = new TxnDao(txnid, email, location);
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
             Block block = cryptoService.addBlock(txnDao.getTxn("Sharath", signService), "Dev");
-            return "<form action=\"create\" method=\"post\">" +
-                    "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\"/><br/><br/>" +
-                    "txnid: <input style=\"width:90%\" type=\"text\" name=\"message\"/><br/><br/>" +
-                    "email: <input style=\"width:90%\" type=\"text\" name=\"owner\"/><br/><br/>" +
-                    "location: <input style=\"width:90%\" type=\"text\" name=\"aadhar\"/><br/><br/>" +
-                    "<input type=\"submit\" value=\"Submit\"/>" +
-                    "</form>" +
+            return createForm(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()) +
                     "<br/><br/>" +
 
                     "Success: <br/><br/>" +
@@ -55,7 +49,7 @@ public class BlockchainController {
     }
 
     @PostMapping(value = "/create-api")
-    public String addBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
+    public String createBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
         TxnDao txnDao = new TxnDao(txnid, email, location);
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
@@ -70,7 +64,7 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/create")
-    public String createBlock(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) throws Exception {
+    public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) throws Exception {
         return "<form action=\"create\" method=\"post\">" +
                 "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
                 "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
@@ -92,12 +86,8 @@ public class BlockchainController {
 
     @PostMapping(value = "/verify")
     public String verifySignature(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
-        return "<form action=\"Verify\" method=\"post\">" +
-                "Signature: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.trim() + "\"/><br/><br/>" +
-                "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.trim() + "\"/><br/><br/>" +
-                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.trim() + "\"/><br/><br/>" +
-                "<input type=\"submit\" value=\"Submit\"/>" +
-                "</form><br/><br/>" +
+        return verifyForm(Optional.of(sign), Optional.of(data), Optional.of(pubKey)) +
+                "<br/><br/>" +
                 "Signature Verified: " + SignService.Verify(data, pubKey, sign);
     }
 
@@ -113,8 +103,8 @@ public class BlockchainController {
 
     @GetMapping(value = "/verify")
     public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> pubKey) {
-        return "<form action=\"Verify\" method=\"post\">" +
-                "Signature: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.orElse("").trim() + "\"/><br/><br/>" +
+        return "<form action=\"verify\" method=\"post\">" +
+                "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\"/><br/><br/>" +
                 "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.orElse("").trim() + "\"/><br/><br/>" +
                 "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.orElse("").trim() + "\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
