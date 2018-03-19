@@ -5,10 +5,10 @@ import app.service.SignService;
 import java.time.LocalDateTime;
 
 public class TxnDao {
-    final String txnid;
-    final String email;
-    final String location;
-    final String createdAt;
+    public final String txnid;
+    public final String email;
+    public final String location;
+    public final String createdAt;
 
     public TxnDao(String txnid, String email, String location) {
         this.txnid = txnid;

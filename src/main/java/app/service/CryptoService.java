@@ -5,10 +5,10 @@ import app.model.Keyz;
 import app.model.Txn;
 import app.utils.BlockManager;
 
-import java.util.HashMap;
 import java.util.List;
 
 import static app.model.StringVar.*;
+import static app.utils.BlockManager.IsValid;
 
 public class CryptoService {
     String messageKey = "message";
@@ -64,11 +64,9 @@ public class CryptoService {
 
     }
 
-    public String showAuthorized() throws Exception {
+    public String showAuthorized() {
         return SurroundWithBraces(JoinWithComma(
-                SuperKeyValuePair(keysMiner.owner, KeyValuePair("publicKey", keysMiner.publicKey)),
-                SuperKeyValuePair(keysDev.owner, KeyValuePair("publicKey", keysDev.publicKey)),
-                SuperKeyValuePair(keysRajiv.owner, KeyValuePair("publicKey", keysRajiv.publicKey))
+                authoritiesManager.keyz.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
         ));
     }
 
@@ -77,25 +75,20 @@ public class CryptoService {
         List<String> blocks = blockManager.getBlocks(blockFile);
 
         String genesis = blocks.get(0);
-        boolean isValid = SignService.Verify(blockManager.extract(messageKey, genesis) + blockManager.extract(ownerKey, genesis) + blockManager.extract(aadharKey, genesis),
-                keysMiner.publicKey, blockManager.extractSignature(genesis));
+        boolean isValid = Block.Deserialize(genesis).verify();
 
         for (int i = 1; i < blocks.size(); i++) {
             String block = blocks.get(i);
-            String previousHash = blockManager.extractSignature(blocks.get(i - 1));
-            isValid = isValid & (blockManager.isValid(block, previousHash, keysMiner.publicKey) |
-                    blockManager.isValid(block, previousHash, keysDev.publicKey) |
-                    blockManager.isValid(block, previousHash, keysRajiv.publicKey)
-            );
+            isValid = isValid & IsValid(block);
         }
 
         return String.valueOf(isValid);
     }
 
-
-    public String showGenesis(String message, String owner, String aadhar) throws Exception {
-        return blockManager.createGenesisBlock(keysDev, message, owner, aadhar);
-    }
+//
+//    public String showGenesis(String message, String owner, String aadhar) throws Exception {
+//        return blockManager.createGenesisBlock(keysDev, message, owner, aadhar);
+//    }
 
     public String generateKeyString() throws Exception {
         Keyz key = Keyz.generateKey();

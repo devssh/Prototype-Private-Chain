@@ -2,6 +2,7 @@ package app.controller;
 
 import app.model.Block;
 import app.model.TxnDao;
+import app.model.VariableManager;
 import app.service.CryptoService;
 import app.service.KeyzManager;
 import app.service.SignService;
@@ -54,11 +55,17 @@ public class BlockchainController {
 
     @GetMapping(value = "/create")
     public String createBlock(@RequestParam Optional<String> sign, @RequestParam Optional<TxnDao> txndao) throws Exception {
+        if (txndao.equals(Optional.empty())) {
+            txndao = Optional.of(new TxnDao("", "", ""));
+        }
+        if (sign.equals(Optional.empty())) {
+            sign = Optional.of("");
+        }
         return "<form action=\"create\" method=\"post\">" +
-                "Sign: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\""+"\" /><br/><br/>" +
-                "txnid: <input style=\"width:90%\" type=\"text\" name=\"message\"/><br/><br/>" +
-                "email: <input style=\"width:90%\" type=\"text\" name=\"owner\"/><br/><br/>" +
-                "location: <input style=\"width:90%\" type=\"text\" name=\"aadhar\"/><br/><br/>" +
+                "Sign: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.get().trim() + "\" /><br/><br/>" +
+                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txndao.get().txnid.trim() + "\" /><br/><br/>" +
+                "email: <input style=\"width:90%\" type=\"text\" name=\"email\" value=\"" + txndao.get().email.trim() + "\" /><br/><br/>" +
+                "location: <input style=\"width:90%\" type=\"text\" name=\"location\" value=\"" + txndao.get().location.trim() + "\" /><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
                 "</form>";
     }
@@ -84,8 +91,27 @@ public class BlockchainController {
                 "Signature Verified: " + SignService.Verify(data, pubKey, sign);
     }
 
+    @PostMapping(value = "/verify-api")
+    public String verifySignatureApi(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
+        return new VariableManager(
+                "sign", sign,
+                "data", data,
+                "pubKey", pubKey,
+                "verified", String.valueOf(SignService.Verify(data, pubKey, sign))
+        ).jsonString();
+    }
+
     @GetMapping(value = "/verify")
     public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> pubKey) {
+        if (sign.equals(Optional.empty())) {
+            sign = Optional.of("");
+        }
+        if (data.equals(Optional.empty())) {
+            data = Optional.of("");
+        }
+        if (pubKey.equals(Optional.empty())) {
+            pubKey = Optional.of("");
+        }
         return "<form action=\"Verify\" method=\"post\">" +
                 "Signature: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.get().trim() + "\"/><br/><br/>" +
                 "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.get().trim() + "\"/><br/><br/>" +
@@ -94,9 +120,9 @@ public class BlockchainController {
                 "</form>";
     }
 
-    @GetMapping(value = "/showGenesis")
-    public String showGenesis(@RequestParam String message, @RequestParam String owner, @RequestParam String aadhar) throws Exception {
-        return cryptoService.showGenesis(message, owner, aadhar);
+    @GetMapping(value = "/createGenesis")
+    public String showGenesis() throws Exception {
+        return new Block(signService.keyzManager.getKey("Dev"), "", new TxnDao("007", "devs@gmail.com", "Store 40, San Jose, California").getTxn("Sharath", signService)).toString();
     }
 
     @GetMapping(value = "/generateKey")
@@ -109,9 +135,9 @@ public class BlockchainController {
         return cryptoService.getStats();
     }
 
-    @GetMapping(value="/sign")
-    public String getSign(@RequestParam String data) throws Exception{
-        SignService signService = new SignService(new KeyzManager(cryptoService.authoritiesManager.keyFile));
+    @GetMapping(value = "/sign")
+    public String getSign(@RequestParam String data) throws Exception {
+        SignService signService = new SignService(new KeyzManager(cryptoService.authoritiesManager.keyFiles), new KeyzManager(cryptoService.usersManager.keyFiles));
         return signService.signWith("Dev", data);
     }
 

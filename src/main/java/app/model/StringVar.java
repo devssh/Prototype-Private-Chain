@@ -41,6 +41,10 @@ public class StringVar {
         return "{" + value + "}";
     }
 
+    public static String SurroundWithQuotes(String value) {
+        return "\"" + value + "\"";
+    }
+
     public static String JoinWith(String delim, String... values) {
         return String.join(delim, values);
     }
@@ -67,6 +71,9 @@ public class StringVar {
 
     public static String KeyValuePair(StringVar var) {
         return KeyValuePair(var, true);
+    }
+    public static String KeyArrayValuePair(StringVar var) {
+        return "\"" + var.name + "\":" + var.value + "";
     }
 
     private static String KeyValuePair(StringVar var, boolean noBraces) {

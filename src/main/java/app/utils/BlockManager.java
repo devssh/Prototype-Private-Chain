@@ -24,7 +24,7 @@ public class BlockManager {
         this.signService = new SignService(authorities, users);
     }
 
-    public boolean isValid(String block) throws Exception {
+    public static boolean IsValid(String block) throws Exception {
         return Block.Deserialize(block).verify();
     }
 

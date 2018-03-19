@@ -65,7 +65,7 @@ public class Block {
 
     @Override
     public String toString() {
-        return sign + ":" + varMan.jsonString();
+        return SurroundWithQuotes(sign) + ":" + varMan.jsonString();
     }
 
     public boolean verify() throws Exception {
