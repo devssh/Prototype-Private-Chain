@@ -8,7 +8,7 @@ public class TxnDao {
     public final String txnid;
     public final String email;
     public final String location;
-    public final String createdAt;
+    private final String createdAt;
 
     public TxnDao(String txnid, String email, String location) {
         this.txnid = txnid;

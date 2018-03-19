@@ -29,12 +29,13 @@ public class BlockchainController {
     }
 
     @PostMapping(value = "/create")
-    public String addBlock(@RequestParam String sign, @ModelAttribute TxnDao txndao) throws Exception {
+    public String addBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
+        TxnDao txnDao = new TxnDao(txnid, email, location);
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock(txndao.getTxn("Sharath", signService), "Dev");
+            Block block = cryptoService.addBlock(txnDao.getTxn("Sharath", signService), "Dev");
             return "<form action=\"create\" method=\"post\">" +
-                    "Sign: <input style=\"width:90%\" type=\"text\" name=\"Sign\"/><br/><br/>" +
+                    "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\"/><br/><br/>" +
                     "txnid: <input style=\"width:90%\" type=\"text\" name=\"message\"/><br/><br/>" +
                     "email: <input style=\"width:90%\" type=\"text\" name=\"owner\"/><br/><br/>" +
                     "location: <input style=\"width:90%\" type=\"text\" name=\"aadhar\"/><br/><br/>" +
@@ -54,18 +55,12 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/create")
-    public String createBlock(@RequestParam Optional<String> sign, @RequestParam Optional<TxnDao> txndao) throws Exception {
-        if (txndao.equals(Optional.empty())) {
-            txndao = Optional.of(new TxnDao("", "", ""));
-        }
-        if (sign.equals(Optional.empty())) {
-            sign = Optional.of("");
-        }
+    public String createBlock(@RequestParam Optional<String> sign,@RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) throws Exception {
         return "<form action=\"create\" method=\"post\">" +
-                "Sign: <input style=\"width:90%\" type=\"text\" name=\"Sign\" value=\"" + sign.get().trim() + "\" /><br/><br/>" +
-                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txndao.get().txnid.trim() + "\" /><br/><br/>" +
-                "email: <input style=\"width:90%\" type=\"text\" name=\"email\" value=\"" + txndao.get().email.trim() + "\" /><br/><br/>" +
-                "location: <input style=\"width:90%\" type=\"text\" name=\"location\" value=\"" + txndao.get().location.trim() + "\" /><br/><br/>" +
+                "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
+                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
+                "email: <input style=\"width:90%\" type=\"text\" name=\"email\" value=\"" + email.orElse("").trim() + "\" /><br/><br/>" +
+                "location: <input style=\"width:90%\" type=\"text\" name=\"location\" value=\"" + location.orElse("").trim() + "\" /><br/><br/>" +
                 "<input type=\"submit\" value=\"Submit\"/>" +
                 "</form>";
     }
