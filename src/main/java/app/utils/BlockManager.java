@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BlockManager {
@@ -30,6 +31,15 @@ public class BlockManager {
 
     public List<String> getBlocks(String blockFile) throws Exception {
         return Files.readAllLines(Paths.get(blockFile));
+    }
+
+    public List<Block> getBlocksAsObjects(String blockFile) throws Exception {
+        List<String> blockStrings = Files.readAllLines(Paths.get(blockFile));
+        List<Block> blocks = new ArrayList<>();
+        for (String blockString: blockStrings) {
+            blocks.add(Block.Deserialize(blockString));
+        }
+        return blocks;
     }
 
 
@@ -72,5 +82,6 @@ public class BlockManager {
         //return signature.matcher(block).group(0);
         return Block.Deserialize(block).sign;
     }
+
 
 }

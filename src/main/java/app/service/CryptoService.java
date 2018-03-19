@@ -5,7 +5,9 @@ import app.model.Keyz;
 import app.model.Txn;
 import app.utils.BlockManager;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static app.model.StringVar.*;
 import static app.utils.BlockManager.IsValid;
@@ -46,8 +48,16 @@ public class CryptoService {
     }
 
     public Block addBlock(Txn txn, String signedBy) throws Exception {
-        List<String> blocks = blockManager.getBlocks(blockFile);
-        String prevHash = blockManager.extractSignature(blocks.get(blocks.size() - 1));
+        List<Block> blocks = blockManager.getBlocksAsObjects(blockFile);
+        String prevHash = blocks.get(blocks.size() - 1).sign;
+
+        if (blocks.stream().filter(block ->
+                Arrays.stream(block.txnids).filter(txnid ->
+                        txn.varMan.get("txnid").equals(txnid)
+                ).collect(Collectors.toList()).size() == 1
+        ).collect(Collectors.toList()).size() == 1) {
+            throw new Exception("Cannot double spend");
+        }
 
         Block block = new Block(authoritiesManager.getKey(signedBy), prevHash, txn);
 

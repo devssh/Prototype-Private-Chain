@@ -1,6 +1,8 @@
 package app.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static app.model.StringVar.*;
 import static app.service.SignService.Sign;
@@ -9,6 +11,7 @@ public class Block {
     final VariableManager varMan;
     public final String sign;
     public final Chunk chunk;
+    public Object[] txnids;
 
     Block(String sign, String nonce, String publicKey, String prevHash, Txn... txns) throws Exception {
         this.varMan = new VariableManager(
@@ -19,6 +22,7 @@ public class Block {
         );
         this.sign = sign;
         this.chunk = new Chunk(sign, publicKey, JoinWith("", nonce, publicKey, prevHash, Txn.SerializeForSign(txns)));
+        this.txnids = Arrays.stream(txns).map(txn -> txn.varMan.get("txnid")).toArray();
     }
 
     public Block(Keyz key, String prevHash, Txn... txns) throws Exception {

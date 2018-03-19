@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import static app.model.StringVar.*;
 
 public class Txn {
-    final VariableManager varMan;
+    public final VariableManager varMan;
     final String sign;
 
     public Txn(String sign, String publicKey, String txnid, String email, String location, String createdAt) {
