@@ -28,8 +28,9 @@ public class BlockManager {
     public static List<Block> GetBlockObjects() throws Exception {
         List<String> blockStrings = Files.readAllLines(Paths.get(BLOCKS_DAT));
         List<Block> blocks = new ArrayList<>();
-        for (String blockString: blockStrings) {
+        for (String blockString : blockStrings) {
             blocks.add(Block.Deserialize(blockString));
+
         }
         return blocks;
     }

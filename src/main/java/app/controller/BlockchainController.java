@@ -30,12 +30,12 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/coupons", produces = "application/json")
-    public String coupons() throws Exception {
+    public String coupons() {
         return "TODO";
     }
 
     @GetMapping(value = "/blockchain", produces = "application/json")
-    public String couponsExplorer() throws Exception {
+    public String couponsExplorer() {
         return "TODO";
     }
 
@@ -75,7 +75,7 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/create")
-    public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) throws Exception {
+    public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) {
         return "<form action=\"create\" method=\"post\">" +
                 "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
                 "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
@@ -86,12 +86,12 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
-    public String showAuthorized() throws Exception {
+    public String showAuthorized() {
         return cryptoService.showAuthorized();
     }
 
     @GetMapping(value = "/users", produces = "application/json")
-    public String showUsers() throws Exception {
+    public String showUsers() {
         return cryptoService.showUsers();
     }
 
@@ -138,7 +138,7 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/stats")
-    public String getStats() throws Exception {
+    public String getStats() {
         return cryptoService.getStats();
     }
 

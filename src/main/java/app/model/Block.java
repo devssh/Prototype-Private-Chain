@@ -1,8 +1,6 @@
 package app.model;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static app.model.StringVar.*;
 import static app.service.SignService.Sign;

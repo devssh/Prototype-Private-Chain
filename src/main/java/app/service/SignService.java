@@ -15,16 +15,6 @@ public class SignService {
     public static final String ENCODING = "UTF-8";
     public static final int RADIX = 16;
 
-    public static KeyzManager KeyzManager;
-
-    static {
-        try {
-            KeyzManager = new KeyzManager();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public SignService() throws Exception {
     }
 
