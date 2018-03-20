@@ -30,7 +30,7 @@ public class BlockchainController {
 
     @PostMapping(value = "/create")
     public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
-        TxnDao txnDao = new TxnDao(txnid, email, location);
+        TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), location.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
             Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", signService));
