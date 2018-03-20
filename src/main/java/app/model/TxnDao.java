@@ -17,9 +17,9 @@ public class TxnDao {
         this.createdAt = LocalDateTime.now().toString();
     }
 
-    public Txn getTxn(String userName, SignService signService) throws Exception {
-        return new Txn(signService.signWith(userName, SerializeForHashing(this)),
-                signService.keyzManager.getKey(userName).publicKey, txnid, email, location, createdAt);
+    public Txn getTxn(String signWith, SignService signService) throws Exception {
+        return new Txn(signService.signWith(signWith, SerializeForHashing(this)),
+                signService.keyzManager.getKey(signWith).publicKey, txnid, email, location, createdAt);
     }
 
 

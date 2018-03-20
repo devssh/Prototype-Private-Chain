@@ -47,7 +47,7 @@ public class CryptoService {
         return SurroundWithBraces(JoinWithComma(blocks));
     }
 
-    public Block addBlock(Txn txn, String signedBy) throws Exception {
+    public Block addBlock(String signedBy, Txn txn) throws Exception {
         List<Block> blocks = blockManager.getBlocksAsObjects(blockFile);
         String prevHash = blocks.get(blocks.size() - 1).sign;
 
@@ -66,7 +66,7 @@ public class CryptoService {
 
 
         if (!newPrevHash.equals(prevHash)) {
-            return addBlock(txn, signedBy);
+            return addBlock(signedBy, txn);
         } else {
             blockManager.appendBlocks(blockFile, block.toString());
             return block;
@@ -77,6 +77,12 @@ public class CryptoService {
     public String showAuthorized() {
         return SurroundWithBraces(JoinWithComma(
                 authoritiesManager.keyz.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
+        ));
+    }
+
+    public String showUsers() {
+        return SurroundWithBraces(JoinWithComma(
+                usersManager.keyz.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
         ));
     }
 

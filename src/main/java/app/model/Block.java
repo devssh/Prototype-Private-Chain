@@ -57,7 +57,7 @@ public class Block {
         );
         this.sign = sign;
         this.chunk = new Chunk(sign, key.publicKey, data);
-        //TODO: handle orphans and concurrent issue
+        //TODO: extract orphans and concurrent issue
     }
 
     public static Block Deserialize(String block) throws Exception {

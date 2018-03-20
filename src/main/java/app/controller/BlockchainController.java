@@ -33,7 +33,7 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid, email, location);
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock(txnDao.getTxn("Sharath", signService), "Dev");
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", signService));
             return createForm(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()) +
                     "<br/><br/>" +
 
@@ -50,10 +50,10 @@ public class BlockchainController {
 
     @PostMapping(value = "/create-api")
     public String createBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
-        TxnDao txnDao = new TxnDao(txnid, email, location);
+        TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), location.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock(txnDao.getTxn("Sharath", signService), "Dev");
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", signService));
             return new VariableManager(
                     "sign", block.sign,
                     "data", block.chunk.data,
@@ -77,6 +77,11 @@ public class BlockchainController {
     @GetMapping(value = "/authorized", produces = "application/json")
     public String showAuthorized() throws Exception {
         return cryptoService.showAuthorized();
+    }
+
+    @GetMapping(value = "/users", produces = "application/json")
+    public String showUsers() throws Exception {
+        return cryptoService.showUsers();
     }
 
     @GetMapping(value = "/verifyAllSignatures", produces = "application/json")
