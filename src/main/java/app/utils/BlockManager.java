@@ -3,8 +3,7 @@ package app.utils;
 import app.model.Block;
 import app.model.Keyz;
 import app.model.Txn;
-import app.service.KeyzManager;
-import app.service.SignService;
+import app.service.FileUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -14,27 +13,20 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockManager {
-    KeyzManager authorities;
-    SignService signService;
-    KeyzManager users;
+import static app.utils.Properties.BLOCKS_DAT;
 
-    public BlockManager(KeyzManager authorities, KeyzManager users) throws Exception {
-        this.authorities = authorities;
-        this.users = users;
-        this.signService = new SignService(authorities, users);
-    }
+public class BlockManager {
 
     public static boolean IsValid(String block) throws Exception {
         return Block.Deserialize(block).verify();
     }
 
-    public List<String> getBlocks(String blockFile) throws Exception {
-        return Files.readAllLines(Paths.get(blockFile));
+    public static List<String> GetBlocks() {
+        return FileUtils.readFile(BLOCKS_DAT);
     }
 
-    public List<Block> getBlocksAsObjects(String blockFile) throws Exception {
-        List<String> blockStrings = Files.readAllLines(Paths.get(blockFile));
+    public static List<Block> GetBlockObjects() throws Exception {
+        List<String> blockStrings = Files.readAllLines(Paths.get(BLOCKS_DAT));
         List<Block> blocks = new ArrayList<>();
         for (String blockString: blockStrings) {
             blocks.add(Block.Deserialize(blockString));
@@ -43,9 +35,9 @@ public class BlockManager {
     }
 
 
-    public List<String> appendBlocks(String blockFile, String... blocks) throws Exception {
+    public static List<String> AppendBlocks(String... blocks) throws Exception {
         //TODO: better way to do this
-        Writer output = new BufferedWriter(new FileWriter(blockFile, true));
+        Writer output = new BufferedWriter(new FileWriter(BLOCKS_DAT, true));
         for (String block : blocks) {
             output.append(block + "\n");
             output.flush();
@@ -53,7 +45,7 @@ public class BlockManager {
 
         output.close();
 
-        return getBlocks(blockFile);
+        return GetBlocks();
     }
 
 //  TODO: Write helper for these
@@ -72,12 +64,12 @@ public class BlockManager {
 //        return createForm(key,"", "");
 //    }
 
-    public String createBlock(Keyz key, String previousHash, Txn txn) throws Exception {
+    public static String CreateBlock(Keyz key, String previousHash, Txn txn) throws Exception {
         return new Block(key, previousHash, txn).toString();
     }
 
 
-    public String extractSignature(String block) throws Exception {
+    public static String ExtractSignature(String block) throws Exception {
         //Pattern signature = Pattern.compile(".*\"Sign\":\"(.*)\".*");
         //return signature.matcher(block).group(0);
         return Block.Deserialize(block).sign;

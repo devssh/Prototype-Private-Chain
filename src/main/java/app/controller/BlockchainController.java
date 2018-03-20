@@ -4,28 +4,39 @@ import app.model.Block;
 import app.model.TxnDao;
 import app.model.VariableManager;
 import app.service.CryptoService;
-import app.service.KeyzManager;
 import app.service.SignService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
+import static app.service.KeyzManager.GetKey;
+import static app.service.SignService.SignWith;
+import static app.utils.Properties.basicSign;
+
 @RestController
 public class BlockchainController {
-    public static final String AUTHORITIES_DAT = "authorities.dat";
-    public static final String USERS_DAT = "users.dat";
-    public static final String BLOCKS_DAT = "blocks.dat";
-    SignService signService = new SignService(new KeyzManager(AUTHORITIES_DAT), new KeyzManager(USERS_DAT));
-    CryptoService cryptoService = new CryptoService(AUTHORITIES_DAT, USERS_DAT, BLOCKS_DAT);
-
-    public String basicSign = "MFkwEw";
+    final CryptoService cryptoService = new CryptoService();
 
     public BlockchainController() throws Exception {
+
     }
 
     @GetMapping(value = "/coupons-explorer", produces = "application/json")
-    public String couponBlockchain() throws Exception {
+    public String blockchain() throws Exception {
         return cryptoService.getBlockchain();
+    }
+
+    @GetMapping(value = "/coupons", produces = "application/json")
+    public String coupons() throws Exception {
+        return "TODO";
+    }
+
+    @GetMapping(value = "/blockchain", produces = "application/json")
+    public String couponsExplorer() throws Exception {
+        return "TODO";
     }
 
     @PostMapping(value = "/create")
@@ -33,7 +44,7 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), location.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", signService));
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath"));
             return createForm(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()) +
                     "<br/><br/>" +
 
@@ -53,7 +64,7 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), location.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", signService));
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath"));
             return new VariableManager(
                     "sign", block.sign,
                     "data", block.chunk.data,
@@ -118,7 +129,7 @@ public class BlockchainController {
 
     @GetMapping(value = "/createGenesis")
     public String showGenesis() throws Exception {
-        return new Block(signService.keyzManager.getKey("Dev"), "", new TxnDao("007", "devs@gmail.com", "Store 40, San Jose, California").getTxn("Sharath", signService)).toString();
+        return new Block(GetKey("Dev"), "", new TxnDao("007", "devs@gmail.com", "Store 40, San Jose, California").getTxn("Sharath")).toString();
     }
 
     @GetMapping(value = "/generateKey")
@@ -133,8 +144,7 @@ public class BlockchainController {
 
     @GetMapping(value = "/sign")
     public String getSign(@RequestParam String data) throws Exception {
-        SignService signService = new SignService(new KeyzManager(cryptoService.authoritiesManager.keyFiles), new KeyzManager(cryptoService.usersManager.keyFiles));
-        return signService.signWith("Dev", data);
+        return SignWith("Dev", data);
     }
 
 

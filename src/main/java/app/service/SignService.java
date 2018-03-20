@@ -8,16 +8,24 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 
+import static app.service.KeyzManager.GetKey;
+
 public class SignService {
     public static final String signatureAlgo = "SHA1withECDSA";
     public static final String ENCODING = "UTF-8";
     public static final int RADIX = 16;
 
-    public final KeyzManager keyzManager;
+    public static KeyzManager KeyzManager;
 
-    public  SignService(KeyzManager authorities, KeyzManager users) throws Exception {
-        //TODO: make this safer than index 0
-        this.keyzManager = new KeyzManager(authorities.keyFiles[0], users.keyFiles[0]);
+    static {
+        try {
+            KeyzManager = new KeyzManager();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public SignService() throws Exception {
     }
 
     public static String Sign(PrivateKey privateKey, String message) throws Exception {
@@ -27,8 +35,8 @@ public class SignService {
         return new BigInteger(1, dsa.sign()).toString(RADIX);
     }
 
-    public String signWith(String signedBy, String message) throws Exception {
-        return Sign(keyzManager.getKey(signedBy).privateKeyz, message);
+    public static String SignWith(String signedBy, String message) throws Exception {
+        return Sign(GetKey(signedBy).privateKeyz, message);
     }
 
     public static String Sign(String privKey, String message) throws Exception {
@@ -46,8 +54,8 @@ public class SignService {
         return Verify(blockMessage, Keyz.decodePublicKeyFromString(pubKey), sign);
     }
 
-    public boolean verifyWith(String blockMessage, String signedBy, String sign) throws Exception {
-        return Verify(blockMessage, keyzManager.getKey(signedBy).publicKeyz, sign);
+    public static boolean VerifyWith(String blockMessage, String signedBy, String sign) throws Exception {
+        return Verify(blockMessage, GetKey(signedBy).publicKeyz, sign);
     }
 
 }

@@ -3,52 +3,33 @@ package app.service;
 import app.model.Block;
 import app.model.Keyz;
 import app.model.Txn;
-import app.utils.BlockManager;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static app.model.StringVar.*;
-import static app.utils.BlockManager.IsValid;
+import static app.service.KeyzManager.GetKey;
+import static app.service.KeyzManager.Users;
+import static app.utils.BlockManager.*;
 
 public class CryptoService {
-    String messageKey = "message";
-    String ownerKey = "owner";
-    String aadharKey = "aadhar";
     int difficulty = 3;
     String difficultyCharacter = "0";
 
 
-    String blockFile;
-
-    List<Keyz> keys;
-    Keyz keysMiner,
-            keysDev,
-            keysRajiv;
-
-    public KeyzManager authoritiesManager, usersManager;
-    BlockManager blockManager;
-
-    public CryptoService(String authoritiesFile, String usersFile, String blockFile) throws Exception {
-        this.authoritiesManager = new KeyzManager(authoritiesFile);
-        this.usersManager = new KeyzManager(usersFile);
-        this.blockManager = new BlockManager(authoritiesManager, usersManager);
-        this.blockFile = blockFile;
-        this.keysMiner = authoritiesManager.getKey("Miner");
-        this.keysDev = authoritiesManager.getKey("Dev");
-        this.keysRajiv = authoritiesManager.getKey("Rajiv");
+    public CryptoService() throws Exception {
     }
 
 
     public String getBlockchain() throws Exception {
-        List<String> blocks = blockManager.getBlocks(blockFile);
+        List<Block> blocks = GetBlockObjects();
 
-        return SurroundWithBraces(JoinWithComma(blocks));
+        return SurroundWithBraces(JoinWithComma(blocks.stream().map(Block::toString).collect(Collectors.toList())));
     }
 
     public Block addBlock(String signedBy, Txn txn) throws Exception {
-        List<Block> blocks = blockManager.getBlocksAsObjects(blockFile);
+        List<Block> blocks = GetBlockObjects();
         String prevHash = blocks.get(blocks.size() - 1).sign;
 
         if (blocks.stream().filter(block ->
@@ -59,16 +40,16 @@ public class CryptoService {
             throw new Exception("Cannot double spend");
         }
 
-        Block block = new Block(authoritiesManager.getKey(signedBy), prevHash, txn);
+        Block block = new Block(GetKey(signedBy), prevHash, txn);
 
-        List<String> newBlocks = blockManager.getBlocks(blockFile);
-        String newPrevHash = blockManager.extractSignature(newBlocks.get(newBlocks.size() - 1));
+        List<String> newBlocks = GetBlocks();
+        String newPrevHash = ExtractSignature(newBlocks.get(newBlocks.size() - 1));
 
 
         if (!newPrevHash.equals(prevHash)) {
             return addBlock(signedBy, txn);
         } else {
-            blockManager.appendBlocks(blockFile, block.toString());
+            AppendBlocks(block.toString());
             return block;
         }
 
@@ -76,19 +57,19 @@ public class CryptoService {
 
     public String showAuthorized() {
         return SurroundWithBraces(JoinWithComma(
-                authoritiesManager.keyz.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
+                KeyzManager.Keys.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
         ));
     }
 
     public String showUsers() {
         return SurroundWithBraces(JoinWithComma(
-                usersManager.keyz.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
+                Users.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
         ));
     }
 
 
     public String verifyAllSignatures() throws Exception {
-        List<String> blocks = blockManager.getBlocks(blockFile);
+        List<String> blocks = GetBlocks();
 
         String genesis = blocks.get(0);
         boolean isValid = Block.Deserialize(genesis).verify();

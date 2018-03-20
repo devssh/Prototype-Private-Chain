@@ -1,8 +1,9 @@
 package app.model;
 
-import app.service.SignService;
-
 import java.time.LocalDateTime;
+
+import static app.service.KeyzManager.GetKey;
+import static app.service.SignService.SignWith;
 
 public class TxnDao {
     public final String txnid;
@@ -17,9 +18,9 @@ public class TxnDao {
         this.createdAt = LocalDateTime.now().toString();
     }
 
-    public Txn getTxn(String signWith, SignService signService) throws Exception {
-        return new Txn(signService.signWith(signWith, SerializeForHashing(this)),
-                signService.keyzManager.getKey(signWith).publicKey, txnid, email, location, createdAt);
+    public Txn getTxn(String signWith) throws Exception {
+        return new Txn(SignWith(signWith, SerializeForHashing(this)),
+                GetKey(signWith).publicKey, txnid, email, location, createdAt);
     }
 
 
