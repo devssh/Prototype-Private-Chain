@@ -39,7 +39,7 @@ public class Block {
 
         String sign = "", data = "";
 
-        while (i < 1000000) {
+        while (true) {
             i = i + 1;
             data = JoinWith("", String.valueOf(i), key.publicKey, prevHash, Txn.SerializeForSign(txns));
             sign = Sign(key.privateKey, data);
