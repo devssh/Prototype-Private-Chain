@@ -5,20 +5,37 @@ import java.util.stream.Collectors;
 
 import static app.model.StringVar.*;
 
-public class Txn {
+public class Txn extends Verifiable {
+    public static final String REDEEM = "redeem";
+    public static final String CREATE = "create";
     public final VariableManager varMan;
-    final String sign;
+    public final String sign;
+    public final String publicKey;
+    public final String data;
 
-    public Txn(String sign, String publicKey, String txnid, String email, String location, String createdAt) {
-        this.varMan = new VariableManager(
-                "sign", sign,
-                "publicKey", publicKey,
-                "txnid", txnid,
-                "email", email,
-                "location", location,
-                "createdAt", createdAt
-        );
+    public Txn(String sign, String publicKey, String txnid, String email, String location, String createdAt, String type) {
         this.sign = sign;
+        this.publicKey = publicKey;
+        this.data = txnid + email + location + createdAt + type;
+        if (type.equals(REDEEM)) {
+            this.varMan = new VariableManager(
+                    "sign", sign,
+                    "publicKey", publicKey,
+                    "txnid", txnid,
+                    "location", location,
+                    "createdAt", createdAt,
+                    "type", type
+            );
+        } else {
+            this.varMan = new VariableManager(
+                    "sign", sign,
+                    "publicKey", publicKey,
+                    "txnid", txnid,
+                    "email", email,
+                    "createdAt", createdAt,
+                    "type", type
+            );
+        }
     }
 
     public static String Serialize(Txn[] txns) {
@@ -32,11 +49,18 @@ public class Txn {
             String sign = extractStringKeyFromJson("sign", txn);
             String publicKey = extractStringKeyFromJson("publicKey", txn);
             String txnid = extractStringKeyFromJson("txnid", txn);
-            String email = extractStringKeyFromJson("email", txn);
-            String location = extractStringKeyFromJson("location", txn);
+            String type = extractStringKeyFromJson("type", txn);
             String createdAt = extractStringKeyFromJson("createdAt", txn);
+            if (type.equals(REDEEM)) {
+                String location = extractStringKeyFromJson("location", txn);
+                return new Txn(sign, publicKey, txnid, "", location, createdAt, type);
+            }
+            else {
+                String email = extractStringKeyFromJson("email", txn);
+                return new Txn(sign, publicKey, txnid, email, "", createdAt, type);
+            }
 
-            return new Txn(sign, publicKey, txnid, email, location, createdAt);
+
         }).toArray(Txn[]::new);
     }
 

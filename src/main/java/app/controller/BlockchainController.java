@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
+import static app.model.Txn.CREATE;
+import static app.model.Txn.REDEEM;
 import static app.service.KeyzManager.GetKey;
 import static app.service.SignService.SignWith;
 import static app.utils.Properties.basicSign;
@@ -24,14 +26,9 @@ public class BlockchainController {
 
     }
 
-    @GetMapping(value = "/coupons-explorer", produces = "application/json")
+    @GetMapping(value = "/coupons", produces = "application/json")
     public String blockchain() throws Exception {
         return cryptoService.getBlockchain();
-    }
-
-    @GetMapping(value = "/coupons", produces = "application/json")
-    public String coupons() {
-        return "TODO";
     }
 
     @GetMapping(value = "/blockchain", produces = "application/json")
@@ -39,50 +36,9 @@ public class BlockchainController {
         return "TODO";
     }
 
-    @PostMapping(value = "/create")
-    public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
-        TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), location.trim());
-        if (sign.equals(basicSign)) {
-            Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath"));
-            return createForm(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()) +
-                    "<br/><br/>" +
-
-                    "Success: <br/><br/>" +
-                    verifyForm(
-                            Optional.of(block.sign),
-                            Optional.of(block.chunk.data),
-                            Optional.of(block.chunk.publicKey)
-                    ) +
-                    "<br/><br/>Computational time: " + (System.currentTimeMillis() - start) + "ms";
-        }
-        return "Invalid signature for Dev";
-    }
-
-    @PostMapping(value = "/create-api")
-    public String createBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email, @RequestParam String location) throws Exception {
-        TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), location.trim());
-        if (sign.equals(basicSign)) {
-            Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath"));
-            return new VariableManager(
-                    "sign", block.sign,
-                    "data", block.chunk.data,
-                    "pubKey", block.chunk.publicKey,
-                    "mineTime", String.valueOf(System.currentTimeMillis() - start) + "ms").jsonString();
-        }
-        return "Invalid signature for Dev";
-    }
-
-    @GetMapping(value = "/create")
-    public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email, @RequestParam Optional<String> location) {
-        return "<form action=\"create\" method=\"post\">" +
-                "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
-                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
-                "email: <input style=\"width:90%\" type=\"text\" name=\"email\" value=\"" + email.orElse("").trim() + "\" /><br/><br/>" +
-                "location: <input style=\"width:90%\" type=\"text\" name=\"location\" value=\"" + location.orElse("").trim() + "\" /><br/><br/>" +
-                "<input type=\"submit\" value=\"Submit\"/>" +
-                "</form>";
+    @GetMapping(value = "/coupons-explorer", produces = "application/json")
+    public String coupons() {
+        return "TODO";
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
@@ -93,6 +49,96 @@ public class BlockchainController {
     @GetMapping(value = "/users", produces = "application/json")
     public String showUsers() {
         return cryptoService.showUsers();
+    }
+
+    @GetMapping(value = "/create")
+    public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email) {
+        return "<form action=\"create\" method=\"post\">" +
+                "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
+                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
+                "email: <input style=\"width:90%\" type=\"text\" name=\"email\" value=\"" + email.orElse("").trim() + "\" /><br/><br/>" +
+                "<input type=\"submit\" value=\"Submit\"/>" +
+                "</form>";
+    }
+
+    @PostMapping(value = "/create")
+    public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email) throws Exception {
+        TxnDao txnDao = new TxnDao(txnid.trim(), "", email.trim());
+        if (sign.equals(basicSign)) {
+            Long start = System.currentTimeMillis();
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", CREATE));
+            return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
+                    "<br/>" +
+                    "Successfully created the block <br/><br/>" +
+                    verifyForm(
+                            Optional.of(block.sign),
+                            Optional.of(block.data),
+                            Optional.of(block.publicKey)
+                    ) +
+                    "<br/><br/>Computational time: " + (System.currentTimeMillis() - start) + "ms";
+        }
+        return "Invalid signature for Dev";
+    }
+
+    @PostMapping(value = "/createApi")
+    public String createBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email) throws Exception {
+        TxnDao txnDao = new TxnDao(txnid.trim(), email, "");
+        if (sign.equals(basicSign)) {
+            Long start = System.currentTimeMillis();
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", CREATE));
+            return new VariableManager(
+                    "sign", block.sign,
+                    "data", block.data,
+                    "pubKey", block.publicKey,
+                    "mineTime", String.valueOf(System.currentTimeMillis() - start) + "ms").jsonString();
+        }
+        return "Invalid signature for Dev";
+    }
+
+    @GetMapping(value = "/redeem")
+    public String redeemForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> location) {
+        return "Redeem Coupon<br/><br/>" +
+                "<form action=\"redeem\" method=\"post\">" +
+                "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
+                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
+                "location: <input style=\"width:90%\" type=\"text\" name=\"location\" value=\"" + location.orElse("").trim() + "\" /><br/><br/>" +
+                "<input type=\"submit\" value=\"Submit\"/>" +
+                "</form>";
+    }
+
+    @PostMapping(value = "/redeem")
+    public String createRedeemBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String location) throws Exception {
+        TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
+        if (sign.equals(basicSign)) {
+            Long start = System.currentTimeMillis();
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", REDEEM));
+            return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
+                    "<br/>" +
+
+                    "Successfully created a redemption block <br/><br/>" +
+                    verifyForm(
+                            Optional.of(block.sign),
+                            Optional.of(block.data),
+                            Optional.of(block.publicKey)
+                    ) +
+                    "<br/><br/>Computational time: " + (System.currentTimeMillis() - start) + "ms";
+        }
+        return "Invalid signature for Dev";
+    }
+
+    @PostMapping(value = "/redeemApi")
+    public String redeemBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String location) throws Exception {
+        TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
+        if (sign.equals(basicSign)) {
+            Long start = System.currentTimeMillis();
+            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", REDEEM));
+            return new VariableManager(
+                    "sign", block.sign,
+                    "data", block.data,
+                    "pubKey", block.publicKey,
+                    "mineTime", String.valueOf(System.currentTimeMillis() - start) + "ms").jsonString();
+        }
+        return "Invalid signature for Dev";
     }
 
     @GetMapping(value = "/verifyAllSignatures", produces = "application/json")
@@ -119,7 +165,8 @@ public class BlockchainController {
 
     @GetMapping(value = "/verify")
     public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> pubKey) {
-        return "<form action=\"verify\" method=\"post\">" +
+        return "Signature Verification utility using ECDSA" +
+                "<form action=\"verify\" method=\"post\">" +
                 "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\"/><br/><br/>" +
                 "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.orElse("").trim() + "\"/><br/><br/>" +
                 "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.orElse("").trim() + "\"/><br/><br/>" +
@@ -129,7 +176,7 @@ public class BlockchainController {
 
     @GetMapping(value = "/createGenesis")
     public String showGenesis() throws Exception {
-        return new Block(GetKey("Dev"), "", new TxnDao("007", "devs@gmail.com", "Store 40, San Jose, California").getTxn("Sharath")).toString();
+        return new Block(GetKey("Dev"), "", new TxnDao("007", "devs@gmail.com", "").getTxn("Sharath", "create")).toString();
     }
 
     @GetMapping(value = "/generateKey")

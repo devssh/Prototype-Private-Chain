@@ -2,6 +2,10 @@ package app.model;
 
 import java.time.LocalDateTime;
 
+import static app.model.Txn.CREATE;
+import static app.model.Txn.REDEEM;
+import static app.service.CryptoService.IsCreatable;
+import static app.service.CryptoService.IsRedeemable;
 import static app.service.KeyzManager.GetKey;
 import static app.service.SignService.SignWith;
 
@@ -11,20 +15,26 @@ public class TxnDao {
     public final String location;
     private final String createdAt;
 
-    public TxnDao(String txnid, String email, String location) {
+    public TxnDao(String txnid, String email, String location) throws Exception {
         this.txnid = txnid;
         this.email = email;
         this.location = location;
         this.createdAt = LocalDateTime.now().toString();
     }
 
-    public Txn getTxn(String signWith) throws Exception {
-        return new Txn(SignWith(signWith, SerializeForHashing(this)),
-                GetKey(signWith).publicKey, txnid, email, location, createdAt);
+    public Txn getTxn(String signWith, String type) throws Exception {
+        if(type.equals(REDEEM) && !IsRedeemable(this.txnid)) {
+            throw new Exception("Cannot redeem token which does not exist");
+        }
+        if(type.equals(CREATE) && !IsCreatable(this.txnid)) {
+            throw new Exception("The coupon already exists");
+        }
+        return new Txn(SignWith(signWith, SerializeForSign(this)),
+                GetKey(signWith).publicKey, txnid, email, location, createdAt, type);
     }
 
 
-    public static String SerializeForHashing(TxnDao txnDao) {
+    public static String SerializeForSign(TxnDao txnDao) {
         return txnDao.txnid + txnDao.email + txnDao.location + txnDao.createdAt;
     }
 }

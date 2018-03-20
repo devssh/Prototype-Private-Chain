@@ -62,7 +62,7 @@ public class BlockManager {
 
 //
 //    public String createGenesisBlock(Keyz key, Txn txn) throws Exception {
-//        return createForm(key,"", "");
+//        return redeemForm(key,"", "");
 //    }
 
     public static String CreateBlock(Keyz key, String previousHash, Txn txn) throws Exception {
