@@ -26,6 +26,12 @@ public class CryptoService {
         return SurroundWithBraces(JoinWithComma(blocks.stream().map(Block::toString).collect(Collectors.toList())), "square");
     }
 
+    public String getBlock(String blockSign) throws Exception {
+        List<Block> blocks = GetBlockObjects();
+
+        return blocks.stream().filter(block -> block.sign.equals(blockSign)).map(Block::toString).collect(Collectors.toList()).get(0);
+    }
+
     public Block addBlock(String signedBy, Txn txn) throws Exception {
         List<Block> blocks = GetBlockObjects();
         String prevHash = blocks.get(blocks.size() - 1).sign;

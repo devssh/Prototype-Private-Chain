@@ -5,10 +5,7 @@ import app.model.TxnDao;
 import app.model.VariableManager;
 import app.service.CryptoService;
 import app.service.SignService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -39,6 +36,11 @@ public class BlockchainController {
     @GetMapping(value = "/coupons-explorer", produces = "application/json")
     public String coupons() {
         return "TODO";
+    }
+
+    @GetMapping(value="/block/{blockSign}", produces = "application/json")
+    public String getBlock(@PathVariable("blockSign") String blockSign) throws Exception {
+        return cryptoService.getBlock(blockSign);
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
