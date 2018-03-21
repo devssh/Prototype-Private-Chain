@@ -37,16 +37,18 @@ public class BlockchainController {
     public BlockchainController() throws Exception {
     }
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 5000)
     public void createBlock() throws Exception {
-        int n = utxoSet.size();
-        if (!processing && n > 0) {
-            processing = true;
-            List<Txn> txns = utxoSet.subList(0, n);
-            cryptoService.addBlock("Dev", txns.toArray(new Txn[n]));
-            utxoSet.removeAll(txns);
+        if (!processing) {
+            int n = utxoSet.size();
+            if (n > 0) {
+                processing = true;
+                List<Txn> txns = utxoSet.subList(0, n);
+                cryptoService.addBlock("Dev", txns.toArray(new Txn[n]));
+                utxoSet.removeAll(txns);
+                processing = false;
+            }
 
-            processing = false;
         }
     }
 
@@ -225,9 +227,6 @@ public class BlockchainController {
 
     @PostMapping(value = "/verifyApi")
     public String verifySignatureApi(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
-        System.out.println("sign" + sign);
-        System.out.println("data" + data);
-        System.out.println("pubKey"+pubKey);
         return new VariableManager(
                 "sign", sign,
                 "data", data,
@@ -249,7 +248,7 @@ public class BlockchainController {
 
     @GetMapping(value = "/createGenesis")
     public String showGenesis() throws Exception {
-        return new Block(GetKey("Dev"), "", new TxnDao("007", "devs@gmail.com", "").getTxn("Sharath", "create")).toString();
+        return new Block(GetKey("Dev"), "", new TxnDao("CoupMLK20", "devs@gmail.com", "").getTxn("Sharath", "create")).toString();
     }
 
     @GetMapping(value = "/generateKey")
