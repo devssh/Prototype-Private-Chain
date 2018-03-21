@@ -32,30 +32,29 @@ public class CryptoService {
         return blocks.stream().filter(block -> block.sign.equals(blockSign)).map(Block::toString).collect(Collectors.toList()).get(0);
     }
 
-    public Block addBlock(String signedBy, Txn txn) throws Exception {
+    public Block addBlock(String signedBy, Txn... txns) throws Exception {
         List<Block> blocks = GetBlockObjects();
         String prevHash = blocks.get(blocks.size() - 1).sign;
 
-        List<Block> size = blocks.stream().filter(block1 ->
-                Arrays.stream(Txn.Deserialize(block1.varMan.get("data"))).filter(txn1 ->
-                        txn1.varMan.get("txnid").equals(txn.varMan.get("txnid")) && txn1.varMan.get("type").equals(REDEEM)
-                ).collect(Collectors.toList()).size() > 0
-        ).collect(Collectors.toList());
-
-        System.out.println("hohohoho" + size.size());
-        System.out.println(Arrays.toString(size.toArray()));
-        if (size.size() > 0) {
-            throw new Exception("Double spend attempt detected");
+        for (Txn txn : txns) {
+            if (blocks.stream().filter(block1 ->
+                    Arrays.stream(Txn.Deserialize(block1.varMan.get("data"))).filter(txn1 ->
+                            txn1.varMan.get("txnid").equals(txn.varMan.get("txnid")) && txn1.varMan.get("type").equals(REDEEM)
+                    ).collect(Collectors.toList()).size() > 0
+            ).collect(Collectors.toList()).size() > 0) {
+                throw new Exception("Double spend attempt detected");
+            }
         }
 
-        Block block = new Block(GetKey(signedBy), prevHash, txn);
+
+        Block block = new Block(GetKey(signedBy), prevHash, txns);
 
         List<String> newBlocks = GetBlocks();
         String newPrevHash = ExtractSignature(newBlocks.get(newBlocks.size() - 1));
 
 
         if (!newPrevHash.equals(prevHash)) {
-            return addBlock(signedBy, txn);
+            return addBlock(signedBy, txns);
         }
 
         AppendBlocks(block.toString());

@@ -1,15 +1,19 @@
 package app.controller;
 
 import app.model.Block;
+import app.model.Txn;
 import app.model.TxnDao;
 import app.model.VariableManager;
 import app.service.CryptoService;
 import app.service.SignService;
 import app.utils.HtmlUtils;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Timer;
 import java.util.stream.Collectors;
 
 import static app.model.StringVar.JoinWith;
@@ -24,10 +28,26 @@ import static app.utils.Properties.basicSign;
 
 @RestController
 public class BlockchainController {
+    //TODO: extract this elsewhere
+    public boolean processing = false;
+    public final List<Txn> utxoSet = new ArrayList<>();
+
     final CryptoService cryptoService = new CryptoService();
 
     public BlockchainController() throws Exception {
+    }
 
+    @Scheduled(fixedRate = 2000)
+    public void createBlock() throws Exception {
+        int n = utxoSet.size();
+        if (!processing && n > 0) {
+            processing = true;
+            List<Txn> txns = utxoSet.subList(0, n);
+            cryptoService.addBlock("Dev", txns.toArray(new Txn[n]));
+            utxoSet.removeAll(txns);
+
+            processing = false;
+        }
     }
 
     @GetMapping(value = "/coupons", produces = "application/json")
@@ -82,7 +102,15 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid.trim(), "", email.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", CREATE));
+
+            int count = GetBlockObjects().size();
+            Txn createTxn = txnDao.getTxn("Sharath", CREATE);
+            utxoSet.add(createTxn);
+            while (utxoSet.contains(createTxn)) {
+                Thread.sleep(500);
+            }
+            List<Block> blocks = GetBlockObjects();
+            Block block = blocks.get(blocks.size() - 1);
             return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
                     "Successfully created the block <br/><br/><br/>" +
                     verifyForm(
