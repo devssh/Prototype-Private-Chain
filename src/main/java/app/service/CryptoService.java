@@ -66,7 +66,7 @@ public class CryptoService {
 
     public String showAuthorized() {
         return SurroundWithBraces(JoinWithComma(
-                KeyzManager.Keys.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
+                KeyzManager.Authorities.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
         ));
     }
 
