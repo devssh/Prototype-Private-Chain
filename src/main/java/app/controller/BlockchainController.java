@@ -72,9 +72,10 @@ public class BlockchainController {
                 "</div>";
     }
 
-    @GetMapping(value = "/block/{blockSign}", produces = "application/json")
+    @GetMapping(value = "/block/{blockSign}")
     public String getBlock(@PathVariable("blockSign") String blockSign) throws Exception {
-        return cryptoService.getBlock(blockSign);
+        Block block = Block.Deserialize(cryptoService.getBlock(blockSign));
+        return verifyForm(Optional.of(block.sign), Optional.of(block.data), Optional.of(block.publicKey)) + "<br/><br/>" + block.toString();
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
@@ -194,7 +195,7 @@ public class BlockchainController {
                 "Signature Verified: " + SignService.Verify(data, pubKey, sign);
     }
 
-    @PostMapping(value = "/verify-api")
+    @PostMapping(value = "/verifyApi")
     public String verifySignatureApi(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
         return new VariableManager(
                 "sign", sign,
@@ -207,7 +208,7 @@ public class BlockchainController {
     @GetMapping(value = "/verify")
     public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> pubKey) {
         return "Signature Verification utility using ECDSA" +
-                "<form action=\"verify\" method=\"post\">" +
+                "<form action=\"/verify\" method=\"post\">" +
                 "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\"/><br/><br/>" +
                 "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.orElse("").trim() + "\"/><br/><br/>" +
                 "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.orElse("").trim() + "\"/><br/><br/>" +
