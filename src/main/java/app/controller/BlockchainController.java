@@ -197,6 +197,9 @@ public class BlockchainController {
 
     @PostMapping(value = "/verifyApi")
     public String verifySignatureApi(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
+        System.out.println("sign" + sign);
+        System.out.println("data" + data);
+        System.out.println("pubKey"+pubKey);
         return new VariableManager(
                 "sign", sign,
                 "data", data,
