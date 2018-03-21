@@ -100,14 +100,14 @@ public class BlockchainController {
 
     @PostMapping(value = "/create")
     public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email) throws Exception {
-        TxnDao txnDao = new TxnDao(txnid.trim(), "", email.trim());
+        TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), "");
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
 
             int count = GetBlockObjects().size();
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
             utxoSet.add(createTxn);
-            while (utxoSet.contains(createTxn)) {
+            while (GetBlockObjects().size() == count) {
                 Thread.sleep(500);
             }
             List<Block> blocks = GetBlockObjects();
@@ -129,7 +129,16 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid.trim(), email, "");
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", CREATE));
+
+            int count = GetBlockObjects().size();
+            Txn createTxn = txnDao.getTxn("Sharath", CREATE);
+            utxoSet.add(createTxn);
+            while (GetBlockObjects().size() == count) {
+                Thread.sleep(500);
+            }
+            List<Block> blocks = GetBlockObjects();
+
+            Block block = blocks.get(blocks.size() - 1);
             return new VariableManager(
                     "sign", block.sign,
                     "data", block.data,
@@ -155,7 +164,17 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", REDEEM));
+
+            int count = GetBlockObjects().size();
+            Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
+            utxoSet.add(redeemTxn);
+            while (GetBlockObjects().size() == count) {
+                Thread.sleep(500);
+            }
+            List<Block> blocks = GetBlockObjects();
+
+            Block block = blocks.get(blocks.size() - 1);
+
             return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
                     "Successfully created a redemption block <br/><br/><br/>" +
                     verifyForm(
@@ -173,7 +192,16 @@ public class BlockchainController {
         TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
-            Block block = cryptoService.addBlock("Dev", txnDao.getTxn("Sharath", REDEEM));
+
+            int count = GetBlockObjects().size();
+            Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
+            utxoSet.add(redeemTxn);
+            while (GetBlockObjects().size() == count) {
+                Thread.sleep(500);
+            }
+            List<Block> blocks = GetBlockObjects();
+
+            Block block = blocks.get(blocks.size() - 1);
             return new VariableManager(
                     "sign", block.sign,
                     "data", block.data,

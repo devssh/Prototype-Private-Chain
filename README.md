@@ -1,5 +1,9 @@
 # Prototype blockchain on Java, to demonstrate signature verification and Proof of Work
-There is clubbing of transactions in a block. The purpose is to verify signatures signed by authorities and mined using Proof of Work at difficulty 3.
+The purpose is to verify signatures signed by authorities and mined using Proof of Work at difficulty 3.
+We have 2 types of transactions:
+1. Create token
+2. Redeem token
+The blocks are created every 5 seconds on average if there is a pending transaction.
 
 ## To run the demo on JDK8
 ```

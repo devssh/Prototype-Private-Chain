@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static app.model.StringVar.*;
+import static app.model.Txn.CREATE;
 import static app.model.Txn.REDEEM;
 import static app.service.KeyzManager.GetKey;
 import static app.service.KeyzManager.Users;
