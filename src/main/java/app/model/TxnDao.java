@@ -1,13 +1,12 @@
 package app.model;
 
-import java.time.LocalDateTime;
-
 import static app.model.Txn.CREATE;
 import static app.model.Txn.REDEEM;
 import static app.service.CryptoService.IsCreatable;
 import static app.service.CryptoService.IsRedeemable;
 import static app.service.KeyzManager.GetKey;
 import static app.service.SignService.SignWith;
+import static app.utils.MiscUtils.GetDateTimeNow;
 
 public class TxnDao {
     public final String txnid;
@@ -15,11 +14,11 @@ public class TxnDao {
     public final String location;
     private final String createdAt;
 
-    public TxnDao(String txnid, String email, String location) throws Exception {
+    public TxnDao(String txnid, String email, String location) {
         this.txnid = txnid;
         this.email = email;
         this.location = location;
-        this.createdAt = LocalDateTime.now().toString();
+        this.createdAt = GetDateTimeNow();
     }
 
     public Txn getTxn(String signWith, String type) throws Exception {

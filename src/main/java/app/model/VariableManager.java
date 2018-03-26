@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import static app.model.StringVar.*;
 
 public class VariableManager {
+    public static final String DATA = "data";
     final List<StringVar> fields = new ArrayList<>();
     final Map<String, String> fieldMap = new HashMap<>();
 
@@ -19,7 +20,7 @@ public class VariableManager {
 
     public String jsonString() {
         return SurroundWithBraces(JoinWithComma(fields.stream().map(x -> {
-            if(x.name.equals("data")) {
+            if(x.name.equals(DATA)) {
                 return KeyArrayValuePair(x);
             }
             return KeyValuePair(x);

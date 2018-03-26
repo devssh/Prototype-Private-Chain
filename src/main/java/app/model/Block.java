@@ -1,46 +1,54 @@
 package app.model;
 
-import java.util.Arrays;
-
 import static app.model.StringVar.*;
+import static app.model.Txn.PUBLIC_KEY;
+import static app.model.VariableManager.DATA;
 import static app.service.SignService.Sign;
+import static app.utils.MiscUtils.GetDateTimeNow;
 
 public class Block extends Verifiable {
+    public static final int DIFFICULTY = 3;
+    public static final String DIFFICULTY_CHARACTER = "0";
+
+    public static final String BLOCK_SIGN = "blockSign";
+    public static final String NONCE = "nonce";
+    public static final String PREV_HASH = "prevHash";
+    public static final String BLOCK_CREATED_AT = "blockCreatedAt";
+
     public final String sign;
     public final String publicKey;
     public final String data;
     public final VariableManager varMan;
-    public String[] txnids;
-    public static final int DIFFICULTY = 3;
-    public static final String DIFFICULTY_CHARACTER = "0";
+    public Txn[] txns;
 
-    Block(String sign, String nonce, String publicKey, String prevHash, Txn... txns) throws Exception {
+    Block(String sign, String nonce, String publicKey, String prevHash, String createdAt, Txn... txns) {
         this.varMan = new VariableManager(
-                "nonce", nonce,
-                "publicKey", publicKey,
-                "prevHash", prevHash,
-                "data", Txn.Serialize(txns)
+                BLOCK_SIGN, sign,
+                NONCE, nonce,
+                PUBLIC_KEY, publicKey,
+                PREV_HASH, prevHash,
+                BLOCK_CREATED_AT, createdAt,
+                DATA, Txn.Serialize(txns)
         );
         this.sign = sign;
         this.publicKey = publicKey;
-        this.data = JoinWith("", nonce, publicKey, prevHash, Txn.SerializeForSign(txns));
-        this.txnids = Arrays.stream(txns).map(txn -> txn.varMan.get("txnid")).toArray(String[]::new);
+        this.data = JoinWith("", nonce, publicKey, prevHash, createdAt, Txn.SerializeForSign(txns));
+        this.txns = txns;
     }
 
     public Block(Keyz key, String prevHash, Txn... txns) throws Exception {
         //TODO: Extract the mining logic
         int i = -1;
-        String block = "";
         String expectedDifficulty = "";
         for (int j = 0; j < DIFFICULTY; j++) {
             expectedDifficulty = expectedDifficulty + DIFFICULTY_CHARACTER;
         }
 
-        String sign = "", data = "";
+        String sign = "", data = "", createdAt = GetDateTimeNow();
 
-        while (i < 1000000) {
+        while (i < Integer.MAX_VALUE) {
             i = i + 1;
-            data = JoinWith("", String.valueOf(i), key.publicKey, prevHash, Txn.SerializeForSign(txns));
+            data = JoinWith("", String.valueOf(i), key.publicKey, prevHash, createdAt, Txn.SerializeForSign(txns));
             sign = Sign(key.privateKey, data);
             int siglen = sign.length();
 
@@ -49,10 +57,12 @@ public class Block extends Verifiable {
             }
         }
         this.varMan = new VariableManager(
-                "nonce", String.valueOf(i),
-                "publicKey", key.publicKey,
-                "prevHash", prevHash,
-                "data", Txn.Serialize(txns)
+                BLOCK_SIGN, sign,
+                NONCE, String.valueOf(i),
+                PUBLIC_KEY, key.publicKey,
+                PREV_HASH, prevHash,
+                BLOCK_CREATED_AT, createdAt,
+                DATA, Txn.Serialize(txns)
         );
         this.sign = sign;
         this.publicKey = key.publicKey;
@@ -60,18 +70,19 @@ public class Block extends Verifiable {
         //TODO: extract orphans and concurrent issue handling
     }
 
-    public static Block Deserialize(String block) throws Exception {
-        String sign = extractStringKeyFromJson("blockSign", block);
-        String nonce = extractStringKeyFromJson("nonce", block);
-        String publicKey = extractStringKeyFromJson("publicKey", block);
-        String prevHash = extractStringKeyFromJson("prevHash", block);
-        Txn[] txns = Txn.Deserialize(extractArrayKeyFromJson("data", block));
-        return new Block(sign, nonce, publicKey, prevHash, txns);
+    public static Block Deserialize(String block) {
+        String sign = extractStringKeyFromJson(BLOCK_SIGN, block);
+        String nonce = extractStringKeyFromJson(NONCE, block);
+        String publicKey = extractStringKeyFromJson(PUBLIC_KEY, block);
+        String prevHash = extractStringKeyFromJson(PREV_HASH, block);
+        String createdAt = extractStringKeyFromJson(BLOCK_CREATED_AT, block);
+        Txn[] txns = Txn.Deserialize(extractArrayKeyFromJson(DATA, block));
+        return new Block(sign, nonce, publicKey, prevHash, createdAt, txns);
     }
 
     @Override
     public String toString() {
-        return "{" + JoinWith(",", KeyValuePair(new StringVar("blockSign", sign)), varMan.jsonString().substring(1));
+        return varMan.jsonString();
     }
 
 }

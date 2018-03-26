@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 public class StringVar {
+    public static final String CURLY = "curly";
+    public static final String SQUARE = "square";
     final String name;
     final String value;
 
@@ -31,11 +33,11 @@ public class StringVar {
     }
 
     public static String SurroundWithBraces(String value) {
-        return SurroundWithBraces(value, "curly");
+        return SurroundWithBraces(value, CURLY);
     }
 
     public static String SurroundWithBraces(String value, String type) {
-        if (type.equals("square")) {
+        if (type.equals(SQUARE)) {
             return "[" + value + "]";
         }
         return "{" + value + "}";

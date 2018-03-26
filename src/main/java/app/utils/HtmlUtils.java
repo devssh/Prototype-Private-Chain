@@ -50,4 +50,24 @@ public class HtmlUtils {
     public static String RedirectAnchor(String name, String url) {
         return "<a href=\"" + url + "\" >" + name + "</a>";
     }
+
+    public static String Ajax(String url, String componentToDisplayResultId) {
+        return "<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js\"></script> \n" +
+                "<script type=\"text/javascript\">\n" +
+                "    $(document).ready(function () {\n" +
+                "        $.ajax({\n" +
+                "            type: 'GET',\n" +
+                "            url: '" + url + "',\n" +
+                "            dataType: \"text\",\n" +
+                "            crossDomain: true,\n" +
+                "            success: function (response) {\n" +
+                "                $(\"#"+componentToDisplayResultId+"\").html(response);\n" +
+                "            },\n" +
+                "            error: function (request, status, error) {\n" +
+                "                alert(error);\n" +
+                "            }\n" +
+                "        });\n" +
+                "    });\n" +
+                "</script>";
+    }
 }

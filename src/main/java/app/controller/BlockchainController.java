@@ -10,43 +10,51 @@ import app.utils.HtmlUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Timer;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static app.model.StringVar.JoinWith;
-import static app.model.Txn.CREATE;
-import static app.model.Txn.REDEEM;
+import static app.model.Txn.*;
 import static app.service.KeyzManager.GetKey;
 import static app.service.SignService.SignWith;
 import static app.utils.BlockManager.GetBlockObjects;
+import static app.utils.BlockManager.GetTxns;
+import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
+import static app.utils.HtmlUtils.Ajax;
 import static app.utils.HtmlUtils.RedirectButton;
-import static app.utils.HtmlUtils.Table;
 import static app.utils.Properties.basicSign;
 
 @RestController
 public class BlockchainController {
     //TODO: extract this elsewhere
     public boolean processing = false;
-    public final List<Txn> utxoSet = new ArrayList<>();
+    public final CopyOnWriteArrayList<Txn> utxoSet = new CopyOnWriteArrayList<>();
+    public final CopyOnWriteArrayList<Txn> completedTxns = new CopyOnWriteArrayList<>();
 
     final CryptoService cryptoService = new CryptoService();
 
     public BlockchainController() throws Exception {
+        //TODO: verify no repeat txns
+        completedTxns.addAll(GetTxns());
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 1000)
     public void createBlock() throws Exception {
         if (!processing) {
             int n = utxoSet.size();
             if (n > 0) {
                 processing = true;
-                List<Txn> txns = utxoSet.subList(0, n);
-                cryptoService.addBlock("Dev", txns.toArray(new Txn[n]));
-                utxoSet.removeAll(txns);
+                CopyOnWriteArrayList<Txn> txnsInBlock = new CopyOnWriteArrayList<>();
+                txnsInBlock.addAll(utxoSet.subList(0, n));
+                cryptoService.addBlock("Dev", txnsInBlock.toArray(new Txn[n]));
+                utxoSet.removeAll(txnsInBlock);
+                completedTxns.addAll(txnsInBlock);
                 processing = false;
+            }
+            if (utxoSet.size() > 0) {
+                createBlock();
             }
 
         }
@@ -104,24 +112,31 @@ public class BlockchainController {
     public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email) throws Exception {
         TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), "");
         if (sign.equals(basicSign)) {
-            Long start = System.currentTimeMillis();
 
-            int count = GetBlockObjects().size();
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
-            utxoSet.add(createTxn);
-            while (GetBlockObjects().size() == count) {
-                Thread.sleep(500);
+            if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(createTxn.varMan.get(TXNID)) &&
+                    txn.varMan.get(TYPE).equals(CREATE)).collect(Collectors.toList()).size() == 0) {
+                utxoSet.add(createTxn);
+                return "<div id=\"response\">Transaction to create " + txnid.trim() + " has been submitted for processing</div>" +
+                        "<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js\"></script> \n" +
+                        "<script type=\"text/javascript\">\n" +
+                        "    $(document).ready(function () {\n" +
+                        "        $.ajax({\n" +
+                        "            type: 'GET',\n" +
+                        "            url: '/verifyTxnCreated/" + txnid.trim() + "',\n" +
+                        "            dataType: \"text\",\n" +
+                        "            crossDomain: true,\n" +
+                        "            success: function (response) {\n" +
+                        "                $(\"#response\").html(response);\n" +
+                        "            },\n" +
+                        "            error: function (request, status, error) {\n" +
+                        "                alert(error);\n" +
+                        "            }\n" +
+                        "        });\n" +
+                        "    });\n" +
+                        "</script>";
             }
-            List<Block> blocks = GetBlockObjects();
-            Block block = blocks.get(blocks.size() - 1);
-            return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
-                    "Successfully created the block <br/><br/><br/>" +
-                    verifyForm(
-                            Optional.of(block.sign),
-                            Optional.of(block.data),
-                            Optional.of(block.publicKey)
-                    ) +
-                    "<br/><br/>Computational time: " + (System.currentTimeMillis() - start) + "ms";
+            return "Transaction already exists and cannot be created again";
         }
         return "Invalid signature for Dev";
     }
@@ -150,6 +165,33 @@ public class BlockchainController {
         return "Invalid signature for Dev";
     }
 
+    @GetMapping(value = "/verifyTxnCreated/{txnid}")
+    public String confirmTxnCreate(@PathVariable("txnid") String txnid) throws Exception {
+        long timeout = 30000L, startTime = System.currentTimeMillis(), endTime = startTime + timeout;
+        List<Txn> completedTxnList = new CopyOnWriteArrayList<>();
+        do {
+            completedTxnList.addAll(completedTxns.stream().filter(txn ->
+                    txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(CREATE)
+            ).collect(Collectors.toList()));
+        } while (completedTxnList.size() == 0 && System.currentTimeMillis() < endTime);
+
+        if (System.currentTimeMillis() > endTime && completedTxnList.size() == 0) {
+            return "Timeout: Transaction not confirmed yet";
+        }
+
+        String blockByTxn = cryptoService.getBlockByTxn(txnid, CREATE);
+
+        Block block = Block.Deserialize(blockByTxn);
+        return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
+                "Successfully created the block <br/><br/><br/>" +
+                verifyForm(
+                        Optional.of(block.sign),
+                        Optional.of(block.data),
+                        Optional.of(block.publicKey)
+                ) +
+                "<br/><br/>Computational time: " + ("todo ") + "ms";
+    }
+
     @GetMapping(value = "/redeem")
     public String redeemForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> location) {
         return "Redeem token<br/><br/>" +
@@ -165,28 +207,46 @@ public class BlockchainController {
     public String createRedeemBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String location) throws Exception {
         TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
         if (sign.equals(basicSign)) {
-            Long start = System.currentTimeMillis();
-
-            int count = GetBlockObjects().size();
             Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
-            utxoSet.add(redeemTxn);
-            while (GetBlockObjects().size() == count) {
-                Thread.sleep(500);
+
+            if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(redeemTxn.varMan.get(TXNID)) &&
+                    txn.varMan.get(TYPE).equals(REDEEM)).collect(Collectors.toList()).size() == 0) {
+                utxoSet.add(redeemTxn);
+                String responseDivId = "response";
+                return "<div id=\""+responseDivId+"\">Transaction to redeem " + txnid.trim() + " has been submitted for processing</div>" +
+                        Ajax("/verifyTxnRedeemed/" + txnid.trim(), responseDivId);
             }
-            List<Block> blocks = GetBlockObjects();
+            throw DOUBLE_SPEND_ATTEMPTED;
 
-            Block block = blocks.get(blocks.size() - 1);
-
-            return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
-                    "Successfully created a redemption block <br/><br/><br/>" +
-                    verifyForm(
-                            Optional.of(block.sign),
-                            Optional.of(block.data),
-                            Optional.of(block.publicKey)
-                    ) +
-                    "<br/><br/>Computational time: " + (System.currentTimeMillis() - start) + "ms";
         }
         return "Invalid signature for Dev";
+    }
+
+
+    @GetMapping(value = "/verifyTxnRedeemed/{txnid}")
+    public String confirmTxnRedeem(@PathVariable("txnid") String txnid) throws Exception {
+        long timeout = 30000L, startTime = System.currentTimeMillis(), endTime = startTime + timeout;
+        List<Txn> completedTxnList = new CopyOnWriteArrayList<>();
+        do {
+            completedTxnList.addAll(completedTxns.stream().filter(txn ->
+                    txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(REDEEM)
+            ).collect(Collectors.toList()));
+        } while (completedTxnList.size() == 0 && System.currentTimeMillis() < endTime);
+
+        if (System.currentTimeMillis() > endTime && completedTxnList.size() == 0) {
+            return "Timeout: Transaction not confirmed yet";
+        }
+
+        Block block = Block.Deserialize(cryptoService.getBlockByTxn(txnid, REDEEM));
+
+        return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
+                "Successfully created a redemption block <br/><br/><br/>" +
+                verifyForm(
+                        Optional.of(block.sign),
+                        Optional.of(block.data),
+                        Optional.of(block.publicKey)
+                ) +
+                "<br/><br/>Computational time: " + ("TODO ") + "ms";
     }
 
     @PostMapping(value = "/redeemApi")

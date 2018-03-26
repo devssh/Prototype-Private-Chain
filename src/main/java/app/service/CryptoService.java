@@ -9,13 +9,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static app.model.StringVar.*;
-import static app.model.Txn.CREATE;
-import static app.model.Txn.REDEEM;
+import static app.model.Txn.*;
+import static app.model.VariableManager.DATA;
 import static app.service.KeyzManager.GetKey;
 import static app.service.KeyzManager.Users;
 import static app.utils.BlockManager.*;
+import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 
 public class CryptoService {
+
+    public static final String BLOCK_NOT_FOUND = "Block not found";
 
     public CryptoService() throws Exception {
     }
@@ -24,7 +27,7 @@ public class CryptoService {
     public String getBlockchain() throws Exception {
         List<Block> blocks = GetBlockObjects();
 
-        return SurroundWithBraces(JoinWithComma(blocks.stream().map(Block::toString).collect(Collectors.toList())), "square");
+        return SurroundWithBraces(JoinWithComma(blocks.stream().map(Block::toString).collect(Collectors.toList())), SQUARE);
     }
 
     public String getBlock(String blockSign) throws Exception {
@@ -33,17 +36,34 @@ public class CryptoService {
         return blocks.stream().filter(block -> block.sign.equals(blockSign)).map(Block::toString).collect(Collectors.toList()).get(0);
     }
 
+    public String getBlockByTxn(String txnid, String type) throws Exception {
+        List<String> blocksHavingTxn = GetBlockObjects().stream().filter(block -> Arrays.stream(block.txns).filter(txn ->
+                        txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(type)
+                ).collect(Collectors.toList()).size() > 0
+        ).map(Block::toString).collect(Collectors.toList());
+
+        if (blocksHavingTxn.size() == 1) {
+            return blocksHavingTxn.get(0);
+        }
+
+        if(blocksHavingTxn.size()==0) {
+            return BLOCK_NOT_FOUND;
+        }
+
+        throw new Exception("Double spending has been found in the data");
+    }
+
     public Block addBlock(String signedBy, Txn... txns) throws Exception {
         List<Block> blocks = GetBlockObjects();
         String prevHash = blocks.get(blocks.size() - 1).sign;
 
         for (Txn txn : txns) {
             if (blocks.stream().filter(block1 ->
-                    Arrays.stream(Txn.Deserialize(block1.varMan.get("data"))).filter(txn1 ->
-                            txn1.varMan.get("txnid").equals(txn.varMan.get("txnid")) && txn1.varMan.get("type").equals(REDEEM)
+                    Arrays.stream(Txn.Deserialize(block1.varMan.get(DATA))).filter(txn1 ->
+                            txn1.varMan.get(TXNID).equals(txn.varMan.get(TXNID)) && txn1.varMan.get("type").equals(REDEEM)
                     ).collect(Collectors.toList()).size() > 0
             ).collect(Collectors.toList()).size() > 0) {
-                throw new Exception("Double spend attempt detected");
+                throw DOUBLE_SPEND_ATTEMPTED;
             }
         }
 
@@ -55,6 +75,7 @@ public class CryptoService {
 
 
         if (!newPrevHash.equals(prevHash)) {
+            // If orphan then repeat
             return addBlock(signedBy, txns);
         }
 
@@ -66,13 +87,13 @@ public class CryptoService {
 
     public String showAuthorized() {
         return SurroundWithBraces(JoinWithComma(
-                KeyzManager.Authorities.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
+                KeyzManager.Authorities.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair(PUBLIC_KEY, key.publicKey))).toArray(String[]::new)
         ));
     }
 
     public String showUsers() {
         return SurroundWithBraces(JoinWithComma(
-                Users.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair("publicKey", key.publicKey))).toArray(String[]::new)
+                Users.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair(PUBLIC_KEY, key.publicKey))).toArray(String[]::new)
         ));
     }
 
@@ -90,10 +111,10 @@ public class CryptoService {
 
         return String.valueOf(isValid);
     }
-
+    //        return blockManager.createGenesisBlock(keysDev, message, owner, aadhar);
+    //    public String showGenesis(String message, String owner, String aadhar) throws Exception {
 //
-//    public String showGenesis(String message, String owner, String aadhar) throws Exception {
-//        return blockManager.createGenesisBlock(keysDev, message, owner, aadhar);
+
 //    }
 
     public String generateKeyString() throws Exception {
@@ -112,8 +133,8 @@ public class CryptoService {
     public static boolean IsRedeemable(String txnid) throws Exception {
         List<Block> blocks = GetBlockObjects();
         return (blocks.stream().filter(block ->
-                Arrays.stream(block.txnids).filter(thistxnid ->
-                        thistxnid.equals(txnid)
+                Arrays.stream(block.txns).filter(txn ->
+                        txn.varMan.get(TXNID).equals(txnid)
                 ).collect(Collectors.toList()).size() > 0
         ).collect(Collectors.toList()).size() > 0);
     }
@@ -121,8 +142,8 @@ public class CryptoService {
     public static boolean IsCreatable(String txnid) throws Exception {
         List<Block> blocks = GetBlockObjects();
         return (blocks.stream().filter(block ->
-                Arrays.stream(block.txnids).filter(thistxnid ->
-                        thistxnid.equals(txnid)
+                Arrays.stream(block.txns).filter(txn ->
+                        txn.varMan.get(TXNID).equals(txnid)
                 ).collect(Collectors.toList()).size() != 0
         ).collect(Collectors.toList()).size() == 0);
     }

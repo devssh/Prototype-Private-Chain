@@ -8,6 +8,15 @@ import static app.model.StringVar.*;
 public class Txn extends Verifiable {
     public static final String REDEEM = "redeem";
     public static final String CREATE = "create";
+
+    public static final String SIGN = "sign";
+    public static final String PUBLIC_KEY = "publicKey";
+    public static final String TXNID = "txnid";
+    public static final String LOCATION = "location";
+    public static final String CREATED_AT = "createdAt";
+    public static final String TYPE = "type";
+    public static final String EMAIL = "email";
+
     public final VariableManager varMan;
     public final String sign;
     public final String publicKey;
@@ -19,21 +28,21 @@ public class Txn extends Verifiable {
         this.data = txnid + email + location + createdAt + type;
         if (type.equals(REDEEM)) {
             this.varMan = new VariableManager(
-                    "sign", sign,
-                    "publicKey", publicKey,
-                    "txnid", txnid,
-                    "location", location,
-                    "createdAt", createdAt,
-                    "type", type
+                    SIGN, sign,
+                    PUBLIC_KEY, publicKey,
+                    TXNID, txnid,
+                    LOCATION, location,
+                    CREATED_AT, createdAt,
+                    TYPE, type
             );
         } else {
             this.varMan = new VariableManager(
-                    "sign", sign,
-                    "publicKey", publicKey,
-                    "txnid", txnid,
-                    "email", email,
-                    "createdAt", createdAt,
-                    "type", type
+                    SIGN, sign,
+                    PUBLIC_KEY, publicKey,
+                    TXNID, txnid,
+                    EMAIL, email,
+                    CREATED_AT, createdAt,
+                    TYPE, type
             );
         }
     }

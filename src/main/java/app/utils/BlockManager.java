@@ -11,25 +11,40 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import static app.model.Block.Deserialize;
 import static app.utils.Properties.BLOCKS_DAT;
 
 public class BlockManager {
 
     public static boolean IsValid(String block) throws Exception {
-        return Block.Deserialize(block).verify();
+        return Deserialize(block).verify();
     }
 
     public static List<String> GetBlocks() {
         return FileUtils.readFile(BLOCKS_DAT);
     }
 
+    public static List<Txn> GetTxns() {
+        List<Txn> txns = new CopyOnWriteArrayList<>();
+        FileUtils.readFile(BLOCKS_DAT).stream().forEach(blockString -> {
+            try {
+                txns.addAll(Arrays.asList(Deserialize(blockString).txns));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return txns;
+    }
+
     public static List<Block> GetBlockObjects() throws Exception {
         List<String> blockStrings = Files.readAllLines(Paths.get(BLOCKS_DAT));
         List<Block> blocks = new ArrayList<>();
         for (String blockString : blockStrings) {
-            blocks.add(Block.Deserialize(blockString));
+            blocks.add(Deserialize(blockString));
 
         }
         return blocks;
@@ -73,7 +88,7 @@ public class BlockManager {
     public static String ExtractSignature(String block) throws Exception {
         //Pattern signature = Pattern.compile(".*\"Sign\":\"(.*)\".*");
         //return signature.matcher(block).group(0);
-        return Block.Deserialize(block).sign;
+        return Deserialize(block).sign;
     }
 
 
