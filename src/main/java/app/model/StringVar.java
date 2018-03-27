@@ -8,8 +8,8 @@ import java.util.Map;
 public class StringVar {
     public static final String CURLY = "curly";
     public static final String SQUARE = "square";
-    final String name;
-    final String value;
+    public final String name;
+    public final String value;
 
     public StringVar(String name, String value) {
         this.name = name;
@@ -53,6 +53,10 @@ public class StringVar {
 
     public static String JoinWith(String delim, List<String> values) {
         return JoinWith(delim, values.toArray(new String[0]));
+    }
+
+    public static String Join(List<String> values) {
+        return JoinWith("", values.toArray(new String[0]));
     }
 
     public static String JoinWithComma(String... values) {

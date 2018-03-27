@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HomePageController {
 
-    @GetMapping(value = "/", produces = "application/json")
+    @GetMapping(value = "/instructions", produces = "application/json")
     public String index() {
         return "Greetings! Health Check success. \n" +
         "Checkout /blockExplorer-explorer for read only initBlockchain data\n"+

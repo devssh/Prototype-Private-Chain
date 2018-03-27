@@ -1,9 +1,6 @@
 package app.controller;
 
-import app.model.Block;
-import app.model.Txn;
-import app.model.TxnDao;
-import app.model.VariableManager;
+import app.model.*;
 import app.service.CryptoService;
 import app.service.SignService;
 import app.utils.HtmlUtils;
@@ -15,15 +12,22 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
-import static app.model.StringVar.JoinWith;
+import static app.model.Block.BLOCK_SIGN;
+import static app.model.StringVar.Join;
+import static app.model.StringVar.Vars;
 import static app.model.Txn.*;
+import static app.model.Verifiable.DATA;
+import static app.model.Verifiable.PUBLIC_KEY;
+import static app.model.Verifiable.SIGN;
+import static app.service.HtmlService.Header;
+import static app.service.HtmlService.HomeRedirectButton;
 import static app.service.KeyzManager.GetKey;
 import static app.service.SignService.SignWith;
 import static app.utils.BlockManager.GetBlockObjects;
 import static app.utils.BlockManager.GetTxns;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 import static app.utils.HtmlUtils.Ajax;
-import static app.utils.HtmlUtils.RedirectButton;
+import static app.utils.HtmlUtils.Form;
 import static app.utils.Properties.basicSign;
 
 @RestController
@@ -70,22 +74,19 @@ public class BlockchainController {
         return "TODO";
     }
 
-    @GetMapping(value = "/coupons-explorer")
+    @GetMapping(value = "/")
     public String blockExplorer() throws Exception {
         List<Block> blocks = GetBlockObjects();
         return "<div style=\"font-size:15px\" >" +
-                RedirectButton("Create Redeemable Token", "create") +
-                RedirectButton("Redeem Token", "redeem") +
-                RedirectButton("See Authorized Miners", "authorized") +
-                RedirectButton("See User Information", "users") +
-                JoinWith("", blocks.stream().map(HtmlUtils::Table).collect(Collectors.toList())) +
+                Header() +
+                "<table>" + Join(blocks.stream().map(HtmlUtils::TableRows).collect(Collectors.toList())) + "</table>" +
                 "</div>";
     }
 
     @GetMapping(value = "/block/{blockSign}")
     public String getBlock(@PathVariable("blockSign") String blockSign) throws Exception {
         Block block = Block.Deserialize(cryptoService.getBlock(blockSign));
-        return verifyForm(Optional.of(block.sign), Optional.of(block.data), Optional.of(block.publicKey)) + "<br/><br/>" + block.toString();
+        return verifyForm(Optional.of(block.sign), Optional.of(block.data), Optional.of(block.publicKey));
     }
 
     @GetMapping(value = "/authorized", produces = "application/json")
@@ -100,12 +101,9 @@ public class BlockchainController {
 
     @GetMapping(value = "/create")
     public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email) {
-        return "<form action=\"create\" method=\"post\">" +
-                "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
-                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
-                "email: <input style=\"width:90%\" type=\"text\" name=\"email\" value=\"" + email.orElse("").trim() + "\" /><br/><br/>" +
-                "<input type=\"submit\" value=\"Create redeemable token\"/>" +
-                "</form>";
+        return "Create token" +
+                Form("create", "post", "Create Redeemable Token",
+                        Vars(Txn.SIGN, sign.orElse(""), TXNID, txnid.orElse(""), EMAIL, email.orElse("")).toArray(new StringVar[3]));
     }
 
     @PostMapping(value = "/create")
@@ -117,26 +115,10 @@ public class BlockchainController {
             if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(createTxn.varMan.get(TXNID)) &&
                     txn.varMan.get(TYPE).equals(CREATE)).collect(Collectors.toList()).size() == 0) {
                 utxoSet.add(createTxn);
-                return "<div id=\"response\">Transaction to create " + txnid.trim() + " has been submitted for processing</div>" +
-                        "<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js\"></script> \n" +
-                        "<script type=\"text/javascript\">\n" +
-                        "    $(document).ready(function () {\n" +
-                        "        $.ajax({\n" +
-                        "            type: 'GET',\n" +
-                        "            url: '/verifyTxnCreated/" + txnid.trim() + "',\n" +
-                        "            dataType: \"text\",\n" +
-                        "            crossDomain: true,\n" +
-                        "            success: function (response) {\n" +
-                        "                $(\"#response\").html(response);\n" +
-                        "            },\n" +
-                        "            error: function (request, status, error) {\n" +
-                        "                alert(error);\n" +
-                        "            }\n" +
-                        "        });\n" +
-                        "    });\n" +
-                        "</script>";
+                return "<div id=\"response\">Transaction to create " + txnid.trim() + " has been submitted for processing...</div>" +
+                        Ajax("/verifyTxnCreated/" + txnid.trim(), "response");
             }
-            return "Transaction already exists and cannot be created again";
+            return "Token already exists and cannot be created again";
         }
         return "Invalid signature for Dev";
     }
@@ -188,19 +170,14 @@ public class BlockchainController {
                         Optional.of(block.sign),
                         Optional.of(block.data),
                         Optional.of(block.publicKey)
-                ) +
-                "<br/><br/>Computational time: " + ("todo ") + "ms";
+                );
     }
 
     @GetMapping(value = "/redeem")
     public String redeemForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> location) {
         return "Redeem token<br/><br/>" +
-                "<form action=\"redeem\" method=\"post\">" +
-                "Sign: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\" /><br/><br/>" +
-                "txnid: <input style=\"width:90%\" type=\"text\" name=\"txnid\" value=\"" + txnid.orElse("").trim() + "\" /><br/><br/>" +
-                "location: <input style=\"width:90%\" type=\"text\" name=\"location\" value=\"" + location.orElse("").trim() + "\" /><br/><br/>" +
-                "<input type=\"submit\" value=\"Redeem token at location\"/>" +
-                "</form>";
+                Form("redeem", "post", "Redeem token at location",
+                        Vars(Txn.SIGN, sign.orElse(""), TXNID, txnid.orElse(""), LOCATION, location.orElse("")).toArray(new StringVar[3]));
     }
 
     @PostMapping(value = "/redeem")
@@ -213,7 +190,7 @@ public class BlockchainController {
                     txn.varMan.get(TYPE).equals(REDEEM)).collect(Collectors.toList()).size() == 0) {
                 utxoSet.add(redeemTxn);
                 String responseDivId = "response";
-                return "<div id=\""+responseDivId+"\">Transaction to redeem " + txnid.trim() + " has been submitted for processing</div>" +
+                return "<div id=\"" + responseDivId + "\">Transaction to redeem " + txnid.trim() + " has been submitted for processing...</div>" +
                         Ajax("/verifyTxnRedeemed/" + txnid.trim(), responseDivId);
             }
             throw DOUBLE_SPEND_ATTEMPTED;
@@ -245,8 +222,7 @@ public class BlockchainController {
                         Optional.of(block.sign),
                         Optional.of(block.data),
                         Optional.of(block.publicKey)
-                ) +
-                "<br/><br/>Computational time: " + ("TODO ") + "ms";
+                );
     }
 
     @PostMapping(value = "/redeemApi")
@@ -265,10 +241,9 @@ public class BlockchainController {
 
             Block block = blocks.get(blocks.size() - 1);
             return new VariableManager(
-                    "sign", block.sign,
-                    "data", block.data,
-                    "pubKey", block.publicKey,
-                    "mineTime", String.valueOf(System.currentTimeMillis() - start) + "ms").jsonString();
+                    BLOCK_SIGN, block.sign,
+                    VariableManager.DATA, block.data,
+                    Txn.PUBLIC_KEY, block.publicKey).jsonString();
         }
         return "Invalid signature for Dev";
     }
@@ -279,29 +254,30 @@ public class BlockchainController {
     }
 
     @PostMapping(value = "/verify")
-    public String verifySignature(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
-        return verifyForm(Optional.of(sign), Optional.of(data), Optional.of(pubKey)) +
+    public String verifySignature(@RequestParam String sign, @RequestParam String data, @RequestParam String publicKey) throws Exception {
+        return verifyForm(Optional.of(sign), Optional.of(data), Optional.of(publicKey)) +
                 "<br/><br/>" +
-                "Signature Verified: " + SignService.Verify(data, pubKey, sign);
+                "Signature Verified: " + SignService.Verify(data, publicKey, sign);
     }
 
     @PostMapping(value = "/verifyApi")
-    public String verifySignatureApi(@RequestParam String sign, @RequestParam String data, @RequestParam String pubKey) throws Exception {
+    public String verifySignatureApi(@RequestParam String sign, @RequestParam String data, @RequestParam String publicKey) throws Exception {
         return new VariableManager(
-                "sign", sign,
-                "data", data,
-                "pubKey", pubKey,
-                "verified", String.valueOf(SignService.Verify(data, pubKey, sign))
+                SIGN, sign,
+                DATA, data,
+                PUBLIC_KEY, publicKey,
+                "verified", String.valueOf(SignService.Verify(data, publicKey, sign))
         ).jsonString();
     }
 
     @GetMapping(value = "/verify")
-    public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> pubKey) {
-        return "Signature Verification utility using ECDSA" +
+    public String verifyForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> data, @RequestParam Optional<String> publicKey) {
+        return HomeRedirectButton() +
+                "Signature Verification utility using ECDSA" +
                 "<form action=\"/verify\" method=\"post\">" +
                 "Signature: <input style=\"width:90%\" type=\"text\" name=\"sign\" value=\"" + sign.orElse("").trim() + "\"/><br/><br/>" +
                 "BlockData: <input style=\"width:90%\" type=\"text\" name=\"data\" value=\"" + data.orElse("").trim() + "\"/><br/><br/>" +
-                "pubKey: <input style=\"width:90%\" type=\"text\" name=\"pubKey\" value=\"" + pubKey.orElse("").trim() + "\"/><br/><br/>" +
+                "publicKey: <input style=\"width:90%\" type=\"text\" name=\"publicKey\" value=\"" + publicKey.orElse("").trim() + "\"/><br/><br/>" +
                 "<input type=\"submit\" value=\"Verify Signature\"/>" +
                 "</form>";
     }
