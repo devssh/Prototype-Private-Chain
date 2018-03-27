@@ -9,6 +9,10 @@ The blocks are created every 5 seconds on average if there is a pending transact
 ```
 ./gradlew bootRun
 ```
+or
+```
+docker-compose up
+```
 
 and visit localhost:8080
 
