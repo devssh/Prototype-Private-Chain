@@ -22,6 +22,8 @@ import static app.model.Verifiable.SIGN;
 import static app.service.HtmlService.Header;
 import static app.service.HtmlService.HomeRedirectButton;
 import static app.service.KeyzManager.GetKey;
+import static app.service.MailSenderService.SendMailWithQRCode;
+import static app.service.QRCodeService.GenerateQRCodeImage;
 import static app.service.SignService.SignWith;
 import static app.utils.BlockManager.GetBlockObjects;
 import static app.utils.BlockManager.GetTxns;
@@ -32,6 +34,7 @@ import static app.utils.Properties.basicSign;
 
 @RestController
 public class BlockchainController {
+    public static final String MY_QRCODE_PNG = "MyQRCode.png";
     //TODO: extract this elsewhere
     public boolean processing = false;
     public final CopyOnWriteArrayList<Txn> utxoSet = new CopyOnWriteArrayList<>();
@@ -101,7 +104,7 @@ public class BlockchainController {
 
     @GetMapping(value = "/create")
     public String createForm(@RequestParam Optional<String> sign, @RequestParam Optional<String> txnid, @RequestParam Optional<String> email) {
-        return "Create token" +
+        return "Create token - Careful, the email will be sent, leave blank if not needed" +
                 Form("create", "post", "Create Redeemable Token",
                         Vars(Txn.SIGN, sign.orElse(""), TXNID, txnid.orElse(""), EMAIL, email.orElse("")).toArray(new StringVar[3]));
     }
@@ -115,6 +118,13 @@ public class BlockchainController {
             if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(createTxn.varMan.get(TXNID)) &&
                     txn.varMan.get(TYPE).equals(CREATE)).collect(Collectors.toList()).size() == 0) {
                 utxoSet.add(createTxn);
+
+                try {
+                    GenerateQRCodeImage(createTxn.varMan.get(TXNID), 350, 350, MY_QRCODE_PNG);
+                    SendMailWithQRCode(createTxn.varMan.get(EMAIL), "Coupon Testing Server - News America Marketing", "Hello, you have received a QR code from Yuval");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 return "<div id=\"response\">Transaction to create " + txnid.trim() + " has been submitted for processing...</div>" +
                         Ajax("/verifyTxnCreated/" + txnid.trim(), "response");
             }
