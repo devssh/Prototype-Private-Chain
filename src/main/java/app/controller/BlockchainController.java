@@ -7,6 +7,7 @@ import app.utils.HtmlUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -80,9 +81,11 @@ public class BlockchainController {
     @GetMapping(value = "/")
     public String blockExplorer() throws Exception {
         List<Block> blocks = GetBlockObjects();
+        List<String> blockchain = blocks.stream().map(HtmlUtils::TableRows).collect(Collectors.toList());
+        Collections.reverse(blockchain);
         return "<div style=\"font-size:15px\" >" +
                 Header() +
-                "<table>" + Join(blocks.stream().map(HtmlUtils::TableRows).collect(Collectors.toList())) + "</table>" +
+                "<table>" + Join(blockchain) + "</table>" +
                 "</div>";
     }
 
