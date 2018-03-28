@@ -6,12 +6,18 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
+import static app.model.StringVar.ExtractStringKeyFromJson;
+
 public class Keyz {
+    public static final String NAME = "name";
+    public static final String PUBLIC_KEY = "publicKey";
+    public static final String PRIVATE_KEY = "privateKey";
     public final String owner;
     public final String publicKey;
     public final String privateKey;
     public final PublicKey publicKeyz;
     public final PrivateKey privateKeyz;
+    public VariableManager varMan;
 
     public Keyz(String owner, String publicKey, String privateKey) throws Exception {
         this.owner = owner;
@@ -19,6 +25,11 @@ public class Keyz {
         this.privateKey = privateKey;
         this.publicKeyz = decodePublicKeyFromString(publicKey);
         this.privateKeyz = decodePrivateKeyFromString(privateKey);
+        this.varMan = new VariableManager(
+                NAME, owner,
+                PUBLIC_KEY, publicKey,
+                PRIVATE_KEY, privateKey
+        );
     }
 
     public Keyz(String owner, PublicKey publicKeyz, PrivateKey privateKeyz) {
@@ -62,14 +73,21 @@ public class Keyz {
         return new Keyz("random", pub, priv);
     }
 
+    public static Keyz Deserialize(String key) {
+        Keyz keyz = null;
+        try {
+            keyz = new Keyz(ExtractStringKeyFromJson(NAME, key),
+                    ExtractStringKeyFromJson(PUBLIC_KEY, key),
+                    ExtractStringKeyFromJson(PRIVATE_KEY, key));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return keyz;
+    }
+
     @Override
     public String toString() {
-        return "Keyz{" +
-                "owner='" + owner + '\'' +
-                ", publicKey='" + publicKey + '\'' +
-                ", privateKey='" + privateKey + '\'' +
-                ", publicKeyz=" + publicKeyz +
-                ", privateKeyz=" + privateKeyz +
-                '}';
+        // aka serialize
+        return varMan.jsonString();
     }
 }

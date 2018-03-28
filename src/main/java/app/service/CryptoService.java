@@ -8,12 +8,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static app.model.Block.PREV_HASH;
 import static app.model.StringVar.*;
 import static app.model.Txn.*;
 import static app.model.VariableManager.DATA;
 import static app.service.FileUtils.AppendBlocks;
+import static app.service.FileUtils.ReadBlockchain;
 import static app.service.KeyzManager.GetKey;
-import static app.service.KeyzManager.Users;
+import static app.service.KeyzManager.Keys;
 import static app.utils.BlockManager.*;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 
@@ -26,19 +28,19 @@ public class CryptoService {
 
 
     public String getBlockchain() throws Exception {
-        List<Block> blocks = GetBlockObjects();
+        List<Block> blocks = ReadBlockchain();
 
-        return SurroundWithBraces(JoinWithComma(blocks.stream().map(Block::toString).collect(Collectors.toList())), SQUARE);
+        return ArrayOfObjects(blocks.stream().map(Block::toString).collect(Collectors.toList()));
     }
 
     public String getBlock(String blockSign) throws Exception {
-        List<Block> blocks = GetBlockObjects();
+        List<Block> blocks = ReadBlockchain();
 
         return blocks.stream().filter(block -> block.sign.equals(blockSign)).map(Block::toString).collect(Collectors.toList()).get(0);
     }
 
     public String getBlockByTxn(String txnid, String type) throws Exception {
-        List<String> blocksHavingTxn = GetBlockObjects().stream().filter(block -> Arrays.stream(block.txns).filter(txn ->
+        List<String> blocksHavingTxn = ReadBlockchain().stream().filter(block -> Arrays.stream(block.txns).filter(txn ->
                         txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(type)
                 ).collect(Collectors.toList()).size() > 0
         ).map(Block::toString).collect(Collectors.toList());
@@ -55,7 +57,7 @@ public class CryptoService {
     }
 
     public Block addBlock(String signedBy, Txn... txns) throws Exception {
-        List<Block> blocks = GetBlockObjects();
+        List<Block> blocks = ReadBlockchain();
         String prevHash = blocks.get(blocks.size() - 1).sign;
 
         for (Txn txn : txns) {
@@ -71,8 +73,8 @@ public class CryptoService {
 
         Block block = new Block(GetKey(signedBy), prevHash, txns);
 
-        List<String> newBlocks = GetBlocks();
-        String newPrevHash = ExtractSignature(newBlocks.get(newBlocks.size() - 1));
+        List<Block> newBlocks = ReadBlockchain();
+        String newPrevHash = newBlocks.get(newBlocks.size() - 1).varMan.get(PREV_HASH);
 
 
         if (!newPrevHash.equals(prevHash)) {
@@ -86,28 +88,22 @@ public class CryptoService {
 
     }
 
-    public String showAuthorized() {
-        return SurroundWithBraces(JoinWithComma(
-                KeyzManager.Authorities.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair(PUBLIC_KEY, key.publicKey))).toArray(String[]::new)
-        ));
-    }
-
     public String showUsers() {
         return SurroundWithBraces(JoinWithComma(
-                Users.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair(PUBLIC_KEY, key.publicKey))).toArray(String[]::new)
+                Keys.stream().map(key -> SuperKeyValuePair(key.owner, KeyValuePair(PUBLIC_KEY, key.publicKey))).toArray(String[]::new)
         ));
     }
 
 
     public String verifyAllSignatures() throws Exception {
-        List<String> blocks = GetBlocks();
+        List<Block> blocks = ReadBlockchain();
 
-        String genesis = blocks.get(0);
-        boolean isValid = Block.Deserialize(genesis).verify();
+        Block genesis = blocks.get(0);
+        boolean isValid = genesis.verify();
 
         for (int i = 1; i < blocks.size(); i++) {
-            String block = blocks.get(i);
-            isValid = isValid & IsValid(block);
+            Block block = blocks.get(i);
+            isValid = isValid & block.verify();
         }
 
         return String.valueOf(isValid);
@@ -132,7 +128,7 @@ public class CryptoService {
     }
 
     public static boolean IsRedeemable(String txnid) throws Exception {
-        List<Block> blocks = GetBlockObjects();
+        List<Block> blocks = ReadBlockchain();
         return (blocks.stream().filter(block ->
                 Arrays.stream(block.txns).filter(txn ->
                         txn.varMan.get(TXNID).equals(txnid)
@@ -141,7 +137,7 @@ public class CryptoService {
     }
 
     public static boolean IsCreatable(String txnid) throws Exception {
-        List<Block> blocks = GetBlockObjects();
+        List<Block> blocks = ReadBlockchain();
         return (blocks.stream().filter(block ->
                 Arrays.stream(block.txns).filter(txn ->
                         txn.varMan.get(TXNID).equals(txnid)

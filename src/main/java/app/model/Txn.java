@@ -55,17 +55,17 @@ public class Txn extends Verifiable {
         String[] txnStrings = StripSquareBraces(txns).split("\\{");
         return Arrays.stream(Arrays.copyOfRange(txnStrings, 1, txnStrings.length)).map(txnString -> {
             String txn = txnString.split("}", 2)[0];
-            String sign = extractStringKeyFromJson("sign", txn);
-            String publicKey = extractStringKeyFromJson("publicKey", txn);
-            String txnid = extractStringKeyFromJson("txnid", txn);
-            String type = extractStringKeyFromJson("type", txn);
-            String createdAt = extractStringKeyFromJson("createdAt", txn);
+            String sign = ExtractStringKeyFromJson("sign", txn);
+            String publicKey = ExtractStringKeyFromJson("publicKey", txn);
+            String txnid = ExtractStringKeyFromJson("txnid", txn);
+            String type = ExtractStringKeyFromJson("type", txn);
+            String createdAt = ExtractStringKeyFromJson("createdAt", txn);
             if (type.equals(REDEEM)) {
-                String location = extractStringKeyFromJson("location", txn);
+                String location = ExtractStringKeyFromJson("location", txn);
                 return new Txn(sign, publicKey, txnid, "", location, createdAt, type);
             }
             else {
-                String email = extractStringKeyFromJson("email", txn);
+                String email = ExtractStringKeyFromJson("email", txn);
                 return new Txn(sign, publicKey, txnid, email, "", createdAt, type);
             }
 

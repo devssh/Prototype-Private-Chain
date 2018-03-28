@@ -1,8 +1,6 @@
 package app.model;
 
 import static app.model.StringVar.*;
-import static app.model.Txn.PUBLIC_KEY;
-import static app.model.VariableManager.DATA;
 import static app.service.SignService.Sign;
 import static app.utils.MiscUtils.GetDateTimeNow;
 
@@ -71,11 +69,11 @@ public class Block extends Verifiable {
     }
 
     public static Block Deserialize(String block) {
-        String sign = extractStringKeyFromJson(BLOCK_SIGN, block);
-        String nonce = extractStringKeyFromJson(NONCE, block);
-        String publicKey = extractStringKeyFromJson(PUBLIC_KEY, block);
-        String prevHash = extractStringKeyFromJson(PREV_HASH, block);
-        String createdAt = extractStringKeyFromJson(BLOCK_CREATED_AT, block);
+        String sign = ExtractStringKeyFromJson(BLOCK_SIGN, block);
+        String nonce = ExtractStringKeyFromJson(NONCE, block);
+        String publicKey = ExtractStringKeyFromJson(PUBLIC_KEY, block);
+        String prevHash = ExtractStringKeyFromJson(PREV_HASH, block);
+        String createdAt = ExtractStringKeyFromJson(BLOCK_CREATED_AT, block);
         Txn[] txns = Txn.Deserialize(extractArrayKeyFromJson(DATA, block));
         return new Block(sign, nonce, publicKey, prevHash, createdAt, txns);
     }

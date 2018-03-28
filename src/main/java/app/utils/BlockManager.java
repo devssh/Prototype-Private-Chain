@@ -10,39 +10,21 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static app.model.Block.Deserialize;
-import static app.service.FileUtils.ReadFile;
-import static app.utils.Properties.BLOCKS_DAT;
+import static app.service.FileUtils.ReadBlockchain;
 
 public class BlockManager {
 
-    public static boolean IsValid(String block) throws Exception {
-        return Deserialize(block).verify();
-    }
 
-    public static List<String> GetBlocks() {
-        return ReadFile(BLOCKS_DAT);
-    }
-
-    public static List<Txn> GetTxns() {
+    public static List<Txn> GetFlattenedTxns() {
         List<Txn> txns = new CopyOnWriteArrayList<>();
-        ReadFile(BLOCKS_DAT).stream().forEach(blockString -> {
+        ReadBlockchain().stream().forEach(block -> {
             try {
-                txns.addAll(Arrays.asList(Deserialize(blockString).txns));
+                txns.addAll(Arrays.asList(block.txns));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
         return txns;
-    }
-
-    public static List<Block> GetBlockObjects() throws Exception {
-        List<String> blockStrings = ReadFile(BLOCKS_DAT);
-        List<Block> blocks = new ArrayList<>();
-        for (String blockString : blockStrings) {
-            blocks.add(Deserialize(blockString));
-
-        }
-        return blocks;
     }
 
 //  TODO: Write helper for these

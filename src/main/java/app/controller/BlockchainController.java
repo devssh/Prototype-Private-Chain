@@ -20,14 +20,14 @@ import static app.model.Txn.*;
 import static app.model.Verifiable.DATA;
 import static app.model.Verifiable.PUBLIC_KEY;
 import static app.model.Verifiable.SIGN;
+import static app.service.FileUtils.ReadBlockchain;
 import static app.service.HtmlService.Header;
 import static app.service.HtmlService.HomeRedirectButton;
 import static app.service.KeyzManager.GetKey;
 import static app.service.MailSenderService.SendMailWithQRCode;
 import static app.service.QRCodeService.GenerateQRCodeImage;
 import static app.service.SignService.SignWith;
-import static app.utils.BlockManager.GetBlockObjects;
-import static app.utils.BlockManager.GetTxns;
+import static app.utils.BlockManager.GetFlattenedTxns;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 import static app.utils.HtmlUtils.Ajax;
 import static app.utils.HtmlUtils.Form;
@@ -45,7 +45,7 @@ public class BlockchainController {
 
     public BlockchainController() throws Exception {
         //TODO: verify no repeat txns
-        completedTxns.addAll(GetTxns());
+        completedTxns.addAll(GetFlattenedTxns());
     }
 
     @Scheduled(fixedRate = 1000)
@@ -80,7 +80,7 @@ public class BlockchainController {
 
     @GetMapping(value = "/")
     public String blockExplorer() throws Exception {
-        List<Block> blocks = GetBlockObjects();
+        List<Block> blocks = ReadBlockchain();
         List<String> blockchain = blocks.stream().map(HtmlUtils::TableRows).collect(Collectors.toList());
         Collections.reverse(blockchain);
         return "<div style=\"font-size:15px\" >" +
@@ -93,11 +93,6 @@ public class BlockchainController {
     public String getBlock(@PathVariable("blockSign") String blockSign) throws Exception {
         Block block = Block.Deserialize(cryptoService.getBlock(blockSign));
         return verifyForm(Optional.of(block.sign), Optional.of(block.data), Optional.of(block.publicKey));
-    }
-
-    @GetMapping(value = "/authorized", produces = "application/json")
-    public String showAuthorized() {
-        return cryptoService.showAuthorized();
     }
 
     @GetMapping(value = "/users", produces = "application/json")
@@ -142,13 +137,13 @@ public class BlockchainController {
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
 
-            int count = GetBlockObjects().size();
+            int count = ReadBlockchain().size();
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
             utxoSet.add(createTxn);
-            while (GetBlockObjects().size() == count) {
+            while (ReadBlockchain().size() == count) {
                 Thread.sleep(500);
             }
-            List<Block> blocks = GetBlockObjects();
+            List<Block> blocks = ReadBlockchain();
 
             Block block = blocks.get(blocks.size() - 1);
             return new VariableManager(
@@ -244,13 +239,13 @@ public class BlockchainController {
         if (sign.equals(basicSign)) {
             Long start = System.currentTimeMillis();
 
-            int count = GetBlockObjects().size();
+            int count = ReadBlockchain().size();
             Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
             utxoSet.add(redeemTxn);
-            while (GetBlockObjects().size() == count) {
+            while (ReadBlockchain().size() == count) {
                 Thread.sleep(500);
             }
-            List<Block> blocks = GetBlockObjects();
+            List<Block> blocks = ReadBlockchain();
 
             Block block = blocks.get(blocks.size() - 1);
             return new VariableManager(

@@ -33,7 +33,11 @@ public class StringVar {
     }
 
     public static String ArrayOfObjects(String... objects) {
-        return SurroundWithBraces(JoinWith(",", objects), SQUARE);
+        return SurroundWithBraces(JoinWithComma(objects), SQUARE);
+    }
+
+    public static String ArrayOfObjects(List<String> objects) {
+        return ArrayOfObjects(objects.toArray(new String[0]));
     }
 
     public static String SurroundWithBraces(String value) {
@@ -119,7 +123,7 @@ public class StringVar {
         return StripFirstAndLast(text);
     }
 
-    public static String extractStringKeyFromJson(String key, String json) {
+    public static String ExtractStringKeyFromJson(String key, String json) {
         return json.split("\"" + key + "\":\"", 2)[1].split("\"", 2)[0];
     }
 

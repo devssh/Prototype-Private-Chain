@@ -2,32 +2,15 @@ package app.service;
 
 import app.model.Keyz;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static app.service.FileUtils.ReadKeys;
+
 public class KeyzManager {
-    public static List<Keyz> Keys = GetKeys(app.utils.Properties.USERS_DAT, app.utils.Properties.AUTHORITIES_DAT);
-    public static final List<Keyz> Users = GetKeys(app.utils.Properties.USERS_DAT);
-    public static final List<Keyz> Authorities = GetKeys(app.utils.Properties.AUTHORITIES_DAT);
+    public static List<Keyz> Keys = ReadKeys();
 
     public KeyzManager() throws Exception {
-    }
-
-    private static List<Keyz> GetKeys(String... keyFiles) {
-        List<Keyz> keys = new ArrayList<>();
-        for (String keyFile : keyFiles) {
-            List<String> keyStrings = FileUtils.ReadFile(keyFile);
-            for (int i = 0; i < keyStrings.size(); i = i + 3) {
-                try {
-                    keys.add(new Keyz(keyStrings.get(i), keyStrings.get(i + 1), keyStrings.get(i + 2)));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return keys;
-
     }
 
     public static Keyz GetKey(String owner) throws Exception {
@@ -41,7 +24,7 @@ public class KeyzManager {
             throw new Exception("Too many keyz with that owner");
         }
 
-        List<Keyz> newKeyz = GetKeys();
+        List<Keyz> newKeyz = ReadKeys();
         if (newKeyz.size() > Keys.size()) {
             Keys.clear();
             Keys.addAll(newKeyz);
@@ -63,7 +46,7 @@ public class KeyzManager {
             throw new Exception("Too many owners for that key");
         }
 
-        List<Keyz> newKeyz = GetKeys();
+        List<Keyz> newKeyz = ReadKeys();
         if (newKeyz.size() > Keys.size()) {
             Keys.clear();
             Keys.addAll(newKeyz);
