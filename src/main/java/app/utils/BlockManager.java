@@ -3,19 +3,14 @@ package app.utils;
 import app.model.Block;
 import app.model.Keyz;
 import app.model.Txn;
-import app.service.FileUtils;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static app.model.Block.Deserialize;
+import static app.service.FileUtils.ReadFile;
 import static app.utils.Properties.BLOCKS_DAT;
 
 public class BlockManager {
@@ -25,12 +20,12 @@ public class BlockManager {
     }
 
     public static List<String> GetBlocks() {
-        return FileUtils.readFile(BLOCKS_DAT);
+        return ReadFile(BLOCKS_DAT);
     }
 
     public static List<Txn> GetTxns() {
         List<Txn> txns = new CopyOnWriteArrayList<>();
-        FileUtils.readFile(BLOCKS_DAT).stream().forEach(blockString -> {
+        ReadFile(BLOCKS_DAT).stream().forEach(blockString -> {
             try {
                 txns.addAll(Arrays.asList(Deserialize(blockString).txns));
             } catch (Exception e) {
@@ -41,27 +36,13 @@ public class BlockManager {
     }
 
     public static List<Block> GetBlockObjects() throws Exception {
-        List<String> blockStrings = Files.readAllLines(Paths.get(BLOCKS_DAT));
+        List<String> blockStrings = ReadFile(BLOCKS_DAT);
         List<Block> blocks = new ArrayList<>();
         for (String blockString : blockStrings) {
             blocks.add(Deserialize(blockString));
 
         }
         return blocks;
-    }
-
-
-    public static List<String> AppendBlocks(String... blocks) throws Exception {
-        //TODO: better way to do this
-        Writer output = new BufferedWriter(new FileWriter(BLOCKS_DAT, true));
-        for (String block : blocks) {
-            output.append(block + "\n");
-            output.flush();
-        }
-
-        output.close();
-
-        return GetBlocks();
     }
 
 //  TODO: Write helper for these

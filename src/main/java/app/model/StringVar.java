@@ -32,6 +32,10 @@ public class StringVar {
         }};
     }
 
+    public static String ArrayOfObjects(String... objects) {
+        return SurroundWithBraces(JoinWith(",", objects), SQUARE);
+    }
+
     public static String SurroundWithBraces(String value) {
         return SurroundWithBraces(value, CURLY);
     }
@@ -56,7 +60,11 @@ public class StringVar {
     }
 
     public static String Join(List<String> values) {
-        return JoinWith("", values.toArray(new String[0]));
+        return Join(values.toArray(new String[0]));
+    }
+
+    public static String Join(String... values) {
+        return JoinWith("", values);
     }
 
     public static String JoinWithComma(String... values) {
@@ -78,6 +86,7 @@ public class StringVar {
     public static String KeyValuePair(StringVar var) {
         return KeyValuePair(var, true);
     }
+
     public static String KeyArrayValuePair(StringVar var) {
         return "\"" + var.name + "\":" + var.value + "";
     }
@@ -95,7 +104,7 @@ public class StringVar {
     }
 
     public static String StripFirstAndLast(String text) {
-        return text.substring(1,text.length()-1);
+        return text.substring(1, text.length() - 1);
     }
 
     public static String StripQuotes(String text) {
@@ -111,10 +120,11 @@ public class StringVar {
     }
 
     public static String extractStringKeyFromJson(String key, String json) {
-        return json.split("\""+key+"\":\"", 2)[1].split("\"", 2)[0];
+        return json.split("\"" + key + "\":\"", 2)[1].split("\"", 2)[0];
     }
+
     public static String extractArrayKeyFromJson(String key, String json) {
-        return SurroundWithBraces(json.split("\""+key+"\":\\[", 2)[1].split("]", 2)[0], "square");
+        return SurroundWithBraces(json.split("\"" + key + "\":\\[", 2)[1].split("]", 2)[0], "square");
     }
 
 }

@@ -17,7 +17,7 @@ public class KeyzManager {
     private static List<Keyz> GetKeys(String... keyFiles) {
         List<Keyz> keys = new ArrayList<>();
         for (String keyFile : keyFiles) {
-            List<String> keyStrings = FileUtils.readFile(keyFile);
+            List<String> keyStrings = FileUtils.ReadFile(keyFile);
             for (int i = 0; i < keyStrings.size(); i = i + 3) {
                 try {
                     keys.add(new Keyz(keyStrings.get(i), keyStrings.get(i + 1), keyStrings.get(i + 2)));

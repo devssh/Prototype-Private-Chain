@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import static app.model.StringVar.*;
 import static app.model.Txn.*;
 import static app.model.VariableManager.DATA;
+import static app.service.FileUtils.AppendBlocks;
 import static app.service.KeyzManager.GetKey;
 import static app.service.KeyzManager.Users;
 import static app.utils.BlockManager.*;
