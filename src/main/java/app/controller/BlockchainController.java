@@ -88,7 +88,7 @@ public class BlockchainController {
                 "<table>" + Join(blockchain) + "</table>" +
                 "</div>";
     }
-
+    
     @GetMapping(value = "/block/{blockSign}")
     public String getBlock(@PathVariable("blockSign") String blockSign) throws Exception {
         Block block = Block.Deserialize(cryptoService.getBlock(blockSign));
