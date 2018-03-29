@@ -31,6 +31,8 @@ targetCompatibility = 1.8
 dependencies {
 
     // tag::jetty[]
+    compile group: 'com.ryantenney.passkit4j', name: 'passkit4j', version: '2.0.1'
+
     compile group: 'com.google.zxing', name: 'javase', version: '3.3.2'
 
     compile group: 'com.google.zxing', name: 'core', version: '3.3.2'
