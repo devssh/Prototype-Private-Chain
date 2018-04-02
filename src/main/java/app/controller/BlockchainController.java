@@ -20,6 +20,7 @@ import static app.model.Txn.*;
 import static app.model.Verifiable.DATA;
 import static app.model.Verifiable.PUBLIC_KEY;
 import static app.model.Verifiable.SIGN;
+import static app.service.AuthService.CheckValidSign;
 import static app.service.FileUtils.ReadBlockchain;
 import static app.service.HtmlService.Header;
 import static app.service.HtmlService.HomeRedirectButton;
@@ -32,7 +33,6 @@ import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 import static app.utils.Exceptions.FAILED_TO_CREATE_TXN;
 import static app.utils.HtmlUtils.Ajax;
 import static app.utils.HtmlUtils.Form;
-import static app.utils.Properties.basicSign;
 
 @RestController
 public class BlockchainController {
@@ -57,7 +57,7 @@ public class BlockchainController {
                 processing = true;
                 CopyOnWriteArrayList<Txn> txnsInBlock = new CopyOnWriteArrayList<>();
                 txnsInBlock.addAll(utxoSet.subList(0, n));
-                cryptoService.addBlock("Dev", txnsInBlock.toArray(new Txn[n]));
+                cryptoService.mineBlock("Dev", txnsInBlock.toArray(new Txn[n]));
                 utxoSet.removeAll(txnsInBlock);
                 completedTxns.addAll(txnsInBlock);
                 processing = false;
@@ -89,7 +89,7 @@ public class BlockchainController {
                 "<table>" + Join(blockchain) + "</table>" +
                 "</div>";
     }
-    
+
     @GetMapping(value = "/block/{blockSign}")
     public String getBlock(@PathVariable("blockSign") String blockSign) throws Exception {
         Block block = Block.Deserialize(cryptoService.getBlock(blockSign));
@@ -111,7 +111,7 @@ public class BlockchainController {
     @PostMapping(value = "/create")
     public String createBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email) throws Exception {
         TxnDao txnDao = new TxnDao(txnid.trim(), email.trim(), "");
-        if (sign.equals(basicSign)) {
+        if (CheckValidSign(sign)) {
 
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
             if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(createTxn.varMan.get(TXNID)) &&
@@ -122,7 +122,7 @@ public class BlockchainController {
                 try {
                     GenerateQRCodeImage(createTxn.varMan.get(TXNID), 350, 350, MY_QRCODE_PNG);
                     SendMailWithQRCode(createTxn.varMan.get(EMAIL), "Coupon Testing Server - News America Marketing",
-                            "Hello, you have received a QR code from Yuval. The coupon code is "+ createTxn.varMan.get(TXNID));
+                            "Hello, you have received a QR code from Yuval. The coupon code is " + createTxn.varMan.get(TXNID));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -137,7 +137,7 @@ public class BlockchainController {
     @PostMapping(value = "/createApi")
     public String createBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String email) throws Exception {
         TxnDao txnDao = new TxnDao(txnid.trim(), email, "");
-        if (sign.equals(basicSign)) {
+        if (CheckValidSign(sign)) {
             Long start = System.currentTimeMillis();
 
             int count = ReadBlockchain().size();
@@ -161,35 +161,29 @@ public class BlockchainController {
     @GetMapping(value = "/verifyTxnCreated/{txnid}")
     public String confirmTxnCreate(@PathVariable("txnid") String txnid) throws Exception {
         long timeout = 30000L, startTime = System.currentTimeMillis(), endTime = startTime + timeout;
-        List<Txn> completedTxnList = new CopyOnWriteArrayList<>();
+        List<Txn> completedTxnThatIsNeeded = new CopyOnWriteArrayList<>();
         do {
-            completedTxnList.addAll(completedTxns.stream().filter(txn ->
+            completedTxnThatIsNeeded.addAll(completedTxns.stream().filter(txn ->
                     txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(CREATE)
             ).collect(Collectors.toList()));
-        } while (completedTxnList.size() == 0 && System.currentTimeMillis() < endTime);
+        } while (completedTxnThatIsNeeded.size() == 0 && System.currentTimeMillis() < endTime);
 
-        if (System.currentTimeMillis() > endTime && completedTxnList.size() == 0) {
-            return "Timeout: Transaction not confirmed yet";
-        }
-
-        String blockByTxn;
         try {
-            blockByTxn = cryptoService.getBlockByTxn(txnid, CREATE);
+            String blockByTxn = cryptoService.getBlockByTxn(txnid, CREATE);
+            Block block = Block.Deserialize(blockByTxn);
+            return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
+                    "Successfully created the block <br/><br/><br/>" +
+                    verifyForm(
+                            Optional.of(block.sign),
+                            Optional.of(block.data),
+                            Optional.of(block.publicKey)
+                    );
         } catch (Exception e) {
             e.printStackTrace();
-            throw FAILED_TO_CREATE_TXN;
+            FAILED_TO_CREATE_TXN.printStackTrace();
         }
-        System.out.println(blockByTxn);
-        System.out.println("----------------------------------------------------");
 
-        Block block = Block.Deserialize(blockByTxn);
-        return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
-                "Successfully created the block <br/><br/><br/>" +
-                verifyForm(
-                        Optional.of(block.sign),
-                        Optional.of(block.data),
-                        Optional.of(block.publicKey)
-                );
+        return "Timeout: Transaction not confirmed yet, consider reattempting to create it";
     }
 
     @GetMapping(value = "/redeem")
@@ -202,7 +196,7 @@ public class BlockchainController {
     @PostMapping(value = "/redeem")
     public String createRedeemBlock(@RequestParam String sign, @RequestParam String txnid, @RequestParam String location) throws Exception {
         TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
-        if (sign.equals(basicSign)) {
+        if (CheckValidSign(sign)) {
             Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
 
             if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(redeemTxn.varMan.get(TXNID)) &&
@@ -247,7 +241,7 @@ public class BlockchainController {
     @PostMapping(value = "/redeemApi")
     public String redeemBlockApi(@RequestParam String sign, @RequestParam String txnid, @RequestParam String location) throws Exception {
         TxnDao txnDao = new TxnDao(txnid.trim(), "", location.trim());
-        if (sign.equals(basicSign)) {
+        if (CheckValidSign(sign)) {
             Long start = System.currentTimeMillis();
 
             int count = ReadBlockchain().size();

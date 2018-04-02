@@ -25,6 +25,7 @@ public class HtmlUtils {
                 TD(block.varMan.get(BLOCK_CREATED_AT)) +
                 TD("Prev Sign: " + new StringBuilder(block.varMan.get(PREV_HASH)).reverse().toString()) +
                 TD("Nonce: " + block.varMan.get(NONCE)) +
+//                TD("Cost to Modify: " + block.varMan.get(DEPTH)) +
                 "</tr>" +
                 TD(Strong("TXNS")) +
                 JoinWith("", Arrays.stream(txns).map(txn -> "<tr>" +

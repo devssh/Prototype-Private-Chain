@@ -9,9 +9,10 @@
     <output-test url="file://$MODULE_DIR$/../../out/test/classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../src/test">
-      <sourceFolder url="file://$MODULE_DIR$/../../src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/../../src/test/resources" type="java-test-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/../../src/test/main/java" isTestSource="true" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../test">
+      <sourceFolder url="file://$MODULE_DIR$/../../test/main/java" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -10,6 +10,7 @@ public class Block extends Verifiable {
 
     public static final String BLOCK_SIGN = "blockSign";
     public static final String NONCE = "nonce";
+    public static final String DEPTH = "depth";
     public static final String PREV_HASH = "prevHash";
     public static final String BLOCK_CREATED_AT = "blockCreatedAt";
 

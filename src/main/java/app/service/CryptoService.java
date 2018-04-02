@@ -16,7 +16,6 @@ import static app.service.FileUtils.AppendBlocks;
 import static app.service.FileUtils.ReadBlockchain;
 import static app.service.KeyzManager.GetKey;
 import static app.service.KeyzManager.Keys;
-import static app.utils.BlockManager.*;
 import static app.utils.Exceptions.BAD_DATA;
 import static app.utils.Exceptions.BLOCK_NOT_FOUND;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
@@ -56,7 +55,7 @@ public class CryptoService {
         throw BAD_DATA;
     }
 
-    public Block addBlock(String signedBy, Txn... txns) throws Exception {
+    public Block mineBlock(String signedBy, Txn... txns) throws Exception {
         List<Block> blocks = ReadBlockchain();
         String prevHash = blocks.get(blocks.size() - 1).sign;
 
@@ -70,16 +69,21 @@ public class CryptoService {
             }
         }
 
+        System.out.println("Mining block");
+
 
         Block block = new Block(GetKey(signedBy), prevHash, txns);
 
         List<Block> newBlocks = ReadBlockchain();
-        String newPrevHash = newBlocks.get(newBlocks.size() - 1).varMan.get(PREV_HASH);
+        String newPrevHash = newBlocks.get(newBlocks.size() - 1).sign;
 
-
+        System.out.println(newPrevHash);
+        System.out.println(prevHash);
+        System.out.println(block.varMan.get(PREV_HASH));
         if (!newPrevHash.equals(prevHash)) {
             // If orphan then repeat
-            return addBlock(signedBy, txns);
+            System.out.println("Block orphaned");
+            return mineBlock(signedBy, txns);
         }
 
         AppendBlocks(block.toString());

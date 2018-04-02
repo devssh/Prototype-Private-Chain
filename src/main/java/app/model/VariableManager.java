@@ -20,7 +20,7 @@ public class VariableManager {
 
     public String jsonString() {
         return SurroundWithBraces(JoinWithComma(fields.stream().map(x -> {
-            if(x.name.equals(DATA)) {
+            if (x.name.equals(DATA)) {
                 return KeyArrayValuePair(x);
             }
             return KeyValuePair(x);
@@ -28,7 +28,10 @@ public class VariableManager {
     }
 
     public String get(String varName) {
-        return fieldMap.get(varName);
+        if (fieldMap.containsKey(varName)) {
+            return fieldMap.get(varName);
+        }
+        return null;
     }
 
     public void set(String varName, String value) {

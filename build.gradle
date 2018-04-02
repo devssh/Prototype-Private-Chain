@@ -24,6 +24,14 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    test {
+        java {
+            srcDirs = ["test/main/java"]
+        }
+    }
+}
+
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
