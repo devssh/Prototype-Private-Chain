@@ -9,6 +9,7 @@ import static app.service.SignService.SignWith;
 import static app.utils.MiscUtils.GetDateTimeNow;
 
 public class TxnDao {
+    //TODO: Move to Txn class
     public final String txnid;
     public final String email;
     public final String location;

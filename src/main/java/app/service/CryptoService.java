@@ -17,11 +17,11 @@ import static app.service.FileUtils.ReadBlockchain;
 import static app.service.KeyzManager.GetKey;
 import static app.service.KeyzManager.Keys;
 import static app.utils.BlockManager.*;
+import static app.utils.Exceptions.BAD_DATA;
+import static app.utils.Exceptions.BLOCK_NOT_FOUND;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 
 public class CryptoService {
-
-    public static final String BLOCK_NOT_FOUND = "Block not found";
 
     public CryptoService() throws Exception {
     }
@@ -50,10 +50,10 @@ public class CryptoService {
         }
 
         if(blocksHavingTxn.size()==0) {
-            return BLOCK_NOT_FOUND;
+            throw BLOCK_NOT_FOUND;
         }
 
-        throw new Exception("Double spending has been found in the data");
+        throw BAD_DATA;
     }
 
     public Block addBlock(String signedBy, Txn... txns) throws Exception {

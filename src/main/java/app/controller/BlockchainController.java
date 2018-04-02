@@ -29,6 +29,7 @@ import static app.service.QRCodeService.GenerateQRCodeImage;
 import static app.service.SignService.SignWith;
 import static app.utils.BlockManager.GetFlattenedTxns;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
+import static app.utils.Exceptions.FAILED_TO_CREATE_TXN;
 import static app.utils.HtmlUtils.Ajax;
 import static app.utils.HtmlUtils.Form;
 import static app.utils.Properties.basicSign;
@@ -115,11 +116,13 @@ public class BlockchainController {
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
             if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(createTxn.varMan.get(TXNID)) &&
                     txn.varMan.get(TYPE).equals(CREATE)).collect(Collectors.toList()).size() == 0) {
+
                 utxoSet.add(createTxn);
 
                 try {
                     GenerateQRCodeImage(createTxn.varMan.get(TXNID), 350, 350, MY_QRCODE_PNG);
-                    SendMailWithQRCode(createTxn.varMan.get(EMAIL), "Coupon Testing Server - News America Marketing", "Hello, you have received a QR code from Yuval");
+                    SendMailWithQRCode(createTxn.varMan.get(EMAIL), "Coupon Testing Server - News America Marketing",
+                            "Hello, you have received a QR code from Yuval. The coupon code is "+ createTxn.varMan.get(TXNID));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -169,7 +172,15 @@ public class BlockchainController {
             return "Timeout: Transaction not confirmed yet";
         }
 
-        String blockByTxn = cryptoService.getBlockByTxn(txnid, CREATE);
+        String blockByTxn;
+        try {
+            blockByTxn = cryptoService.getBlockByTxn(txnid, CREATE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw FAILED_TO_CREATE_TXN;
+        }
+        System.out.println(blockByTxn);
+        System.out.println("----------------------------------------------------");
 
         Block block = Block.Deserialize(blockByTxn);
         return createForm(Optional.empty(), Optional.empty(), Optional.empty()) +
