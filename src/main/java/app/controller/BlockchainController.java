@@ -7,6 +7,7 @@ import app.utils.HtmlUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import static app.service.SignService.SignWith;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 import static app.utils.Exceptions.FAILED_TO_CREATE_TXN;
 import static app.utils.HtmlUtils.Ajax;
+import static app.utils.HtmlUtils.COST_PER_BLOCK;
 import static app.utils.HtmlUtils.Form;
 
 @RestController
@@ -58,11 +60,16 @@ public class BlockchainController {
     @GetMapping(value = "/")
     public String blockExplorer() throws Exception {
         List<Block> blocks = ReadBlockchain();
-        List<String> blockchain = blocks.stream().map(HtmlUtils::TableRows).collect(Collectors.toList());
-        Collections.reverse(blockchain);
+        Collections.reverse(blocks);
+        List<String> blockchainHTML = new ArrayList<>();
+        for (int depth = 0; depth < blocks.size(); depth++) {
+            blockchainHTML.add(HtmlUtils.TableRows(blocks.get(depth), depth + 1));
+        }
         return "<div style=\"font-size:15px\" >" +
                 Header() +
-                "<table>" + Join(blockchain) + "</table>" +
+                "<br/>Difficulty is set to 3 zeros in hexadecimal ~ 16 * 16 * 16 = 4096 nonces to find block ~ $" +
+                String.valueOf(COST_PER_BLOCK * 10000).substring(0,3) + " per 10,000 blocks. Avg block time is 1 second " +
+                "<table>" + Join(blockchainHTML) + "</table>" +
                 "</div>";
     }
 
@@ -184,14 +191,14 @@ public class BlockchainController {
             completedTxn = GetCompletedTxn(txnid, REDEEM);
         } while (completedTxn == null && System.currentTimeMillis() < endTime);
 
-        if(completedTxn!=null) {
-        String blockByTxn = cryptoService.getBlockByTxn(txnid, REDEEM);
+        if (completedTxn != null) {
+            String blockByTxn = cryptoService.getBlockByTxn(txnid, REDEEM);
             Block block = Block.Deserialize(blockByTxn);
             return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
                     "Successfully created the redemption block <br/><br/><br/>" +
                     verifyForm(
                             Optional.of(block.sign),
-                        Optional.of(block.data),
+                            Optional.of(block.data),
                             Optional.of(block.publicKey)
                     );
         }

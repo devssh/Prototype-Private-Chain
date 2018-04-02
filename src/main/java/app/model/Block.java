@@ -1,13 +1,13 @@
 package app.model;
 
+import java.util.Map;
+
 import static app.model.StringVar.*;
+import static app.service.MiningService.Mine;
 import static app.service.SignService.Sign;
 import static app.utils.MiscUtils.GetDateTimeNow;
 
 public class Block extends Verifiable {
-    public static final int DIFFICULTY = 3;
-    public static final String DIFFICULTY_CHARACTER = "0";
-
     public static final String BLOCK_SIGN = "blockSign";
     public static final String NONCE = "nonce";
     public static final String DEPTH = "depth";
@@ -36,37 +36,21 @@ public class Block extends Verifiable {
     }
 
     public Block(Keyz key, String prevHash, Txn... txns) throws Exception {
-        //TODO: Extract the mining logic
-        int i = -1;
-        String expectedDifficulty = "";
-        for (int j = 0; j < DIFFICULTY; j++) {
-            expectedDifficulty = expectedDifficulty + DIFFICULTY_CHARACTER;
-        }
+        Map<String, String> miningData = Mine(key, prevHash, Txn.SerializeForSign(txns));
 
-        String sign = "", data = "", createdAt = GetDateTimeNow();
+        String sign = miningData.get(BLOCK_SIGN);
 
-        while (i < Integer.MAX_VALUE) {
-            i = i + 1;
-            data = JoinWith("", String.valueOf(i), key.publicKey, prevHash, createdAt, Txn.SerializeForSign(txns));
-            sign = Sign(key.privateKey, data);
-            int siglen = sign.length();
-
-            if (sign.substring(siglen - DIFFICULTY, siglen).equals(expectedDifficulty)) {
-                break;
-            }
-        }
         this.varMan = new VariableManager(
                 BLOCK_SIGN, sign,
-                NONCE, String.valueOf(i),
+                NONCE, miningData.get(NONCE),
                 PUBLIC_KEY, key.publicKey,
                 PREV_HASH, prevHash,
-                BLOCK_CREATED_AT, createdAt,
+                BLOCK_CREATED_AT, miningData.get(BLOCK_CREATED_AT),
                 DATA, Txn.Serialize(txns)
         );
         this.sign = sign;
         this.publicKey = key.publicKey;
-        this.data = data;
-        //TODO: extract orphans and concurrent issue handling
+        this.data = miningData.get(DATA);
     }
 
     public static Block Deserialize(String block) {
