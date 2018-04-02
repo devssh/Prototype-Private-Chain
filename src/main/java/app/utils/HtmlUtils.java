@@ -15,7 +15,7 @@ import static app.model.Txn.PUBLIC_KEY;
 
 public class HtmlUtils {
 
-    public static final double COST_PER_BLOCK = 0.00038;
+    public static final double COST_PER_BLOCK = 0.00000305;
 
     public static String TableRows(Block block, int depth) {
         Txn[] txns = Txn.Deserialize(block.varMan.get("data"));

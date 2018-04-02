@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static app.model.Block.BLOCK_SIGN;
 import static app.model.Blockchain.*;
@@ -29,9 +28,7 @@ import static app.service.KeyzManager.GetKey;
 import static app.service.SignService.SignWith;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 import static app.utils.Exceptions.FAILED_TO_CREATE_TXN;
-import static app.utils.HtmlUtils.Ajax;
-import static app.utils.HtmlUtils.COST_PER_BLOCK;
-import static app.utils.HtmlUtils.Form;
+import static app.utils.HtmlUtils.*;
 
 @RestController
 public class BlockchainController {
@@ -68,7 +65,10 @@ public class BlockchainController {
         return "<div style=\"font-size:15px\" >" +
                 Header() +
                 "<br/>Difficulty is set to 3 zeros in hexadecimal ~ 16 * 16 * 16 = 4096 nonces to find block ~ $" +
-                String.valueOf(COST_PER_BLOCK * 10000).substring(0,3) + " per 10,000 blocks. Avg block time is 1 second " +
+                String.valueOf(COST_PER_BLOCK * 1000000) + " per 1,000,000 blocks. " +
+                "<br/>Avg block time is 1 second so cost to modify block created today will be $" + String.valueOf(COST_PER_BLOCK * 1000000) + " in ~ 11.5 days at this difficulty. " +
+                "Increasing difficulty to 4 increases that cost to ~ "+String.valueOf(COST_PER_BLOCK * 1000000)+" x 16 = $" + String.valueOf(COST_PER_BLOCK * 1000000 * 16) +" in 11.5 days."+
+                "<br/>Increasing difficulty to 18 zeros like current Bitcoin difficulty increases that cost to $47,158,741 in 1 hour."+
                 "<table>" + Join(blockchainHTML) + "</table>" +
                 "</div>";
     }

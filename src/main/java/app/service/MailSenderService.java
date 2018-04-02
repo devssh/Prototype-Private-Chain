@@ -18,7 +18,7 @@ public class MailSenderService {
         emailSender.setPort(587);
 
         emailSender.setUsername("deva3sood@gmail.com");
-        emailSender.setPassword("crazypublicsmtp");
+        emailSender.setPassword("nopass");
 
         Properties props = emailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
