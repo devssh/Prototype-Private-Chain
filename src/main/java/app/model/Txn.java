@@ -3,6 +3,7 @@ package app.model;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static app.model.HashString.hashString;
 import static app.model.StringVar.*;
 
 public class Txn extends Verifiable {
@@ -63,8 +64,7 @@ public class Txn extends Verifiable {
             if (type.equals(REDEEM)) {
                 String location = ExtractStringKeyFromJson("location", txn);
                 return new Txn(sign, publicKey, txnid, "", location, createdAt, type);
-            }
-            else {
+            } else {
                 String email = ExtractStringKeyFromJson("email", txn);
                 return new Txn(sign, publicKey, txnid, email, "", createdAt, type);
             }
@@ -80,5 +80,17 @@ public class Txn extends Verifiable {
     @Override
     public String toString() {
         return varMan.jsonString();
+    }
+
+    public static boolean areEqual(Txn one, Txn other) {
+        return one.varMan.get(TXNID).equals(other.varMan.get(TXNID)) && one.varMan.get(TYPE).equals(other.varMan.get(TYPE));
+    }
+
+    public static HashString EqualityString(String txnid, String type) {
+        return hashString(txnid + type);
+    }
+
+    public HashString equalityString() {
+        return hashString(varMan.get(TXNID) + varMan.get(TYPE));
     }
 }

@@ -8,7 +8,7 @@ import javax.mail.internet.MimeMessage;
 import java.io.File;
 import java.util.Properties;
 
-import static app.controller.BlockchainController.MY_QRCODE_PNG;
+import static app.service.QRCodeService.MY_QRCODE_PNG;
 
 public class MailSenderService {
 

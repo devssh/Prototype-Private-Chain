@@ -16,15 +16,9 @@ import static app.service.FileUtils.AppendBlocks;
 import static app.service.FileUtils.ReadBlockchain;
 import static app.service.KeyzManager.GetKey;
 import static app.service.KeyzManager.Keys;
-import static app.utils.Exceptions.BAD_DATA;
-import static app.utils.Exceptions.BLOCK_NOT_FOUND;
-import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
+import static app.utils.Exceptions.*;
 
 public class CryptoService {
-
-    public CryptoService() throws Exception {
-    }
-
 
     public String getBlockchain() throws Exception {
         List<Block> blocks = ReadBlockchain();

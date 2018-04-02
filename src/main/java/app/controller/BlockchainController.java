@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static app.model.Block.BLOCK_SIGN;
+import static app.model.Blockchain.*;
 import static app.model.StringVar.Join;
 import static app.model.StringVar.Vars;
 import static app.model.Txn.*;
@@ -25,10 +25,7 @@ import static app.service.FileUtils.ReadBlockchain;
 import static app.service.HtmlService.Header;
 import static app.service.HtmlService.HomeRedirectButton;
 import static app.service.KeyzManager.GetKey;
-import static app.service.MailSenderService.SendMailWithQRCode;
-import static app.service.QRCodeService.GenerateQRCodeImage;
 import static app.service.SignService.SignWith;
-import static app.utils.BlockManager.GetFlattenedTxns;
 import static app.utils.Exceptions.DOUBLE_SPEND_ATTEMPTED;
 import static app.utils.Exceptions.FAILED_TO_CREATE_TXN;
 import static app.utils.HtmlUtils.Ajax;
@@ -36,37 +33,16 @@ import static app.utils.HtmlUtils.Form;
 
 @RestController
 public class BlockchainController {
-    public static final String MY_QRCODE_PNG = "MyQRCode.png";
-    //TODO: extract this elsewhere
-    public boolean processing = false;
-    public final CopyOnWriteArrayList<Txn> utxoSet = new CopyOnWriteArrayList<>();
-    public final CopyOnWriteArrayList<Txn> completedTxns = new CopyOnWriteArrayList<>();
-
+    public static final String TIMEOUT_TRANSACTION_NOT_CONFIRMED_YET_CONSIDER_REATTEMPTING_TO_CREATE_IT = "Timeout: Transaction not confirmed yet, consider reattempting to create it";
     final CryptoService cryptoService = new CryptoService();
 
     public BlockchainController() throws Exception {
-        //TODO: verify no repeat txns
-        completedTxns.addAll(GetFlattenedTxns());
+        InitCompletedTxns();
     }
 
     @Scheduled(fixedRate = 1000)
     public void createBlock() throws Exception {
-        if (!processing) {
-            int n = utxoSet.size();
-            if (n > 0) {
-                processing = true;
-                CopyOnWriteArrayList<Txn> txnsInBlock = new CopyOnWriteArrayList<>();
-                txnsInBlock.addAll(utxoSet.subList(0, n));
-                cryptoService.mineBlock("Dev", txnsInBlock.toArray(new Txn[n]));
-                utxoSet.removeAll(txnsInBlock);
-                completedTxns.addAll(txnsInBlock);
-                processing = false;
-            }
-            if (utxoSet.size() > 0) {
-                createBlock();
-            }
-
-        }
+        MineBlock();
     }
 
     @GetMapping(value = "/coupons", produces = "application/json")
@@ -114,24 +90,13 @@ public class BlockchainController {
         if (CheckValidSign(sign)) {
 
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
-            if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(createTxn.varMan.get(TXNID)) &&
-                    txn.varMan.get(TYPE).equals(CREATE)).collect(Collectors.toList()).size() == 0) {
-
-                utxoSet.add(createTxn);
-
-                try {
-                    GenerateQRCodeImage(createTxn.varMan.get(TXNID), 350, 350, MY_QRCODE_PNG);
-                    SendMailWithQRCode(createTxn.varMan.get(EMAIL), "Coupon Testing Server - News America Marketing",
-                            "Hello, you have received a QR code from Yuval. The coupon code is " + createTxn.varMan.get(TXNID));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            if (ADD_TXN_TO_UTXOSET(createTxn)) {
                 return "<div id=\"response\">Transaction to create " + txnid.trim() + " has been submitted for processing...</div>" +
                         Ajax("/verifyTxnCreated/" + txnid.trim(), "response");
             }
             return "Token already exists and cannot be created again";
         }
-        return "Invalid signature for Dev";
+        return "Invalid signature for " + "Dev";
     }
 
     @PostMapping(value = "/createApi")
@@ -142,7 +107,9 @@ public class BlockchainController {
 
             int count = ReadBlockchain().size();
             Txn createTxn = txnDao.getTxn("Sharath", CREATE);
-            utxoSet.add(createTxn);
+            if (!ADD_TXN_TO_UTXOSET(createTxn)) {
+                throw new Exception("Cannot create duplicate txn");
+            }
             while (ReadBlockchain().size() == count) {
                 Thread.sleep(500);
             }
@@ -159,14 +126,12 @@ public class BlockchainController {
     }
 
     @GetMapping(value = "/verifyTxnCreated/{txnid}")
-    public String confirmTxnCreate(@PathVariable("txnid") String txnid) throws Exception {
+    public String confirmTxnCreate(@PathVariable("txnid") String txnid) {
         long timeout = 30000L, startTime = System.currentTimeMillis(), endTime = startTime + timeout;
-        List<Txn> completedTxnThatIsNeeded = new CopyOnWriteArrayList<>();
+        Txn completedTxnThatIsNeeded;
         do {
-            completedTxnThatIsNeeded.addAll(completedTxns.stream().filter(txn ->
-                    txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(CREATE)
-            ).collect(Collectors.toList()));
-        } while (completedTxnThatIsNeeded.size() == 0 && System.currentTimeMillis() < endTime);
+            completedTxnThatIsNeeded = GetCompletedTxn(txnid, CREATE);
+        } while (completedTxnThatIsNeeded == null && System.currentTimeMillis() < endTime);
 
         try {
             String blockByTxn = cryptoService.getBlockByTxn(txnid, CREATE);
@@ -183,7 +148,7 @@ public class BlockchainController {
             FAILED_TO_CREATE_TXN.printStackTrace();
         }
 
-        return "Timeout: Transaction not confirmed yet, consider reattempting to create it";
+        return TIMEOUT_TRANSACTION_NOT_CONFIRMED_YET_CONSIDER_REATTEMPTING_TO_CREATE_IT;
     }
 
     @GetMapping(value = "/redeem")
@@ -199,9 +164,7 @@ public class BlockchainController {
         if (CheckValidSign(sign)) {
             Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
 
-            if (completedTxns.stream().filter(txn -> txn.varMan.get(TXNID).equals(redeemTxn.varMan.get(TXNID)) &&
-                    txn.varMan.get(TYPE).equals(REDEEM)).collect(Collectors.toList()).size() == 0) {
-                utxoSet.add(redeemTxn);
+            if (ADD_TXN_TO_UTXOSET(redeemTxn)) {
                 String responseDivId = "response";
                 return "<div id=\"" + responseDivId + "\">Transaction to redeem " + txnid.trim() + " has been submitted for processing...</div>" +
                         Ajax("/verifyTxnRedeemed/" + txnid.trim(), responseDivId);
@@ -216,26 +179,24 @@ public class BlockchainController {
     @GetMapping(value = "/verifyTxnRedeemed/{txnid}")
     public String confirmTxnRedeem(@PathVariable("txnid") String txnid) throws Exception {
         long timeout = 30000L, startTime = System.currentTimeMillis(), endTime = startTime + timeout;
-        List<Txn> completedTxnList = new CopyOnWriteArrayList<>();
+        Txn completedTxn;
         do {
-            completedTxnList.addAll(completedTxns.stream().filter(txn ->
-                    txn.varMan.get(TXNID).equals(txnid) && txn.varMan.get(TYPE).equals(REDEEM)
-            ).collect(Collectors.toList()));
-        } while (completedTxnList.size() == 0 && System.currentTimeMillis() < endTime);
+            completedTxn = GetCompletedTxn(txnid, REDEEM);
+        } while (completedTxn == null && System.currentTimeMillis() < endTime);
 
-        if (System.currentTimeMillis() > endTime && completedTxnList.size() == 0) {
-            return "Timeout: Transaction not confirmed yet";
+        if(completedTxn!=null) {
+        String blockByTxn = cryptoService.getBlockByTxn(txnid, REDEEM);
+            Block block = Block.Deserialize(blockByTxn);
+            return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
+                    "Successfully created the redemption block <br/><br/><br/>" +
+                    verifyForm(
+                            Optional.of(block.sign),
+                        Optional.of(block.data),
+                            Optional.of(block.publicKey)
+                    );
         }
 
-        Block block = Block.Deserialize(cryptoService.getBlockByTxn(txnid, REDEEM));
-
-        return redeemForm(Optional.empty(), Optional.empty(), Optional.empty()) +
-                "Successfully created a redemption block <br/><br/><br/>" +
-                verifyForm(
-                        Optional.of(block.sign),
-                        Optional.of(block.data),
-                        Optional.of(block.publicKey)
-                );
+        return TIMEOUT_TRANSACTION_NOT_CONFIRMED_YET_CONSIDER_REATTEMPTING_TO_CREATE_IT;
     }
 
     @PostMapping(value = "/redeemApi")
@@ -246,7 +207,7 @@ public class BlockchainController {
 
             int count = ReadBlockchain().size();
             Txn redeemTxn = txnDao.getTxn("Sharath", REDEEM);
-            utxoSet.add(redeemTxn);
+            ADD_TXN_TO_UTXOSET(redeemTxn);
             while (ReadBlockchain().size() == count) {
                 Thread.sleep(500);
             }
