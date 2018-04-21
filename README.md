@@ -1,3 +1,5 @@
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+
 # Prototype blockchain on Java, to demonstrate signature verification and Proof of Work
 The purpose is to verify signatures signed by authorities and mined using Proof of Work at difficulty 3.
 We have 2 types of transactions:
