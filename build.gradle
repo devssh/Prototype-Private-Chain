@@ -39,7 +39,11 @@ targetCompatibility = 1.8
 dependencies {
 
     // tag::jetty[]
-    compile group: 'com.ryantenney.passkit4j', name: 'passkit4j', version: '2.0.1'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.6.3'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.6.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.3'
+
+    compile group: 'de.brendamour', name: 'jpasskit', version: '0.0.8'
 
     compile group: 'com.google.zxing', name: 'javase', version: '3.3.2'
 
