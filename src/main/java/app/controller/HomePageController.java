@@ -2,6 +2,8 @@ package app.controller;
 import app.service.MailSenderService;
 import app.service.PassKitService;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -22,9 +24,9 @@ public class HomePageController {
     public String testMail(@PathVariable("email") String email){
         System.out.println(email);
         try {
-            PassKitService.createPass("007","Test coupon");
-            FileSystemResource file = new FileSystemResource(new File("discountCoupon.pkpass"));
-            MailSenderService.sendMail(email,"NAM","Discount Coupon",file);
+            InputStreamSource test_coupon = PassKitService.createPass("Test coupon");
+//            FileSystemResource file = new FileSystemResource(new File("discountCoupon.pkpass"));
+            MailSenderService.sendMail(email,"NAM","Discount Coupon",test_coupon);
             return "Success, email was sent";
         }
        catch (Exception e){

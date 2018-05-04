@@ -1,6 +1,7 @@
 package app.service;
 
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
@@ -11,7 +12,7 @@ import java.util.Scanner;
 
 public class MailSenderService {
 
-    public static void sendMail(String to, String subject, String text, FileSystemResource attachment) throws Exception {
+    public static void sendMail(String to, String subject, String text, InputStreamSource inputStreamSource) throws Exception {
         JavaMailSenderImpl emailSender = new JavaMailSenderImpl();
         emailSender.setHost("smtp.gmail.com");
         emailSender.setPort(587);
@@ -31,7 +32,7 @@ public class MailSenderService {
         helper.setSubject(subject);
         helper.setText(text);
 
-        helper.addAttachment(attachment.getFilename(),attachment.getFile());
+        helper.addAttachment("coupon.pkpass", inputStreamSource);
         emailSender.send(message);
     }
 }

@@ -8,15 +8,16 @@ import de.brendamour.jpasskit.enums.PKBarcodeFormat;
 import de.brendamour.jpasskit.passes.PKGenericPass;
 import de.brendamour.jpasskit.signing.*;
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamSource;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PassKitService {
-    public static void createPass(String serialNumber, String message) throws Exception {
+    public static InputStreamSource createPass(String transactionId) throws Exception {
         String teamIdentifier = "9HK4QP6364";
         String passTypeIdentifier = "pass.com.nam.discountCoupon";
         String organizationName = "ThoughtWorks Ltd";
@@ -32,18 +33,18 @@ public class PassKitService {
             PKPass pass = new PKPass();
             pass.setPassTypeIdentifier(passTypeIdentifier);
             pass.setAuthenticationToken("vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc");
-            pass.setSerialNumber(serialNumber);
+            pass.setSerialNumber(transactionId);
             pass.setTeamIdentifier(teamIdentifier); // replace this with your team ID
             pass.setOrganizationName(organizationName);
             pass.setDescription(description);
             pass.setLogoText(logoText);
             pass.setForegroundColor("rgb(255, 255, 255)");
-            pass.setBackgroundColor("rgb(206, 140, 53)");
+            pass.setBackgroundColor("rgb(117, 198, 226)");
 
             PKBarcode barcode = new PKBarcode();
             barcode.setFormat(PKBarcodeFormat.PKBarcodeFormatPDF417);
-            barcode.setMessageEncoding(Charset.forName("iso-8859-1"));
-            barcode.setMessage(message);
+            barcode.setMessageEncoding(Charset.forName("utf-8"));
+            barcode.setMessage(transactionId);
             List<PKBarcode> barcodes = new ArrayList<PKBarcode>();
             barcodes.add(barcode);
             pass.setBarcodes(barcodes);
@@ -64,9 +65,10 @@ public class PassKitService {
                 ObjectMapper objectMapper = new ObjectMapper();
                 PKFileBasedSigningUtil pkSigningUtil = new PKFileBasedSigningUtil(objectMapper);
                 byte[] signedAndZippedPkPassArchive = pkSigningUtil.createSignedAndZippedPkPassArchive(pass, passTemplate, pkSigningInformation);
-                String outputFile = "./discountCoupon.pkpass"; // change the name of the pass
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(signedAndZippedPkPassArchive);
-                IOUtils.copy(inputStream, new FileOutputStream(outputFile));
+//                String outputFile = "./discountCoupon.pkpass"; // change the name of the pass
+//                IOUtils.copy(inputStream, new FileOutputStream(outputFile));
+                return new ByteArrayResource(IOUtils.toByteArray(inputStream));
 
             } else {
                 System.out.println("the pass is NOT Valid man!!!");
@@ -76,5 +78,6 @@ public class PassKitService {
             System.out.println("failed!");
         }
 
+        return null;
     }
 }

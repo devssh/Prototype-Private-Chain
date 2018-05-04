@@ -1,14 +1,14 @@
 package app.model;
 
 import app.service.CryptoService;
-import app.service.PassKitService;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.InputStreamSource;
 
-import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static app.model.Txn.*;
 import static app.service.MailSenderService.sendMail;
+import static app.service.PassKitService.createPass;
 import static app.utils.BlockManager.GetFlattenedTxns;
 import static app.utils.Console.Println;
 
@@ -41,12 +41,11 @@ public class Blockchain {
                 try {
                     for (HashString hashString : txnsInBlock.keySet()) {
                         Txn minedTxn = txnsInBlock.get(hashString);
-                        if(minedTxn.varMan.get(TYPE).equals(CREATE)){
+                        if (minedTxn.varMan.get(TYPE).equals(CREATE)) {
                             //TODO: Assign unique number to serial number
-                            PassKitService.createPass("007",minedTxn.varMan.get(TXNID));
-                            FileSystemResource file = new FileSystemResource(new File("discountCoupon.pkpass"));
+                            InputStreamSource pkpass = createPass(minedTxn.varMan.get(TXNID));
                             sendMail(minedTxn.varMan.get(EMAIL), "Coupon Testing Server - News America Marketing",
-                                    "Hello, you have received a discount coupon from Yuval. " , file);
+                                    "Hello, you have received a discount coupon from Yuval. ", pkpass);
                         }
                     }
                 } catch (Exception e) {
