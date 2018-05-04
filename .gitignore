@@ -3,4 +3,4 @@
 build/**
 .gradle/**
 .gradle/3.1/**
-
+password.dat

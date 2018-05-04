@@ -2,10 +2,7 @@ package app.controller;
 import app.service.MailSenderService;
 import app.service.PassKitService;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 
@@ -21,16 +18,18 @@ public class HomePageController {
         "Checkout /Verify-form to validate signature";
     }
 
-    @RequestMapping(value = "/testMail", method = RequestMethod.GET)
-    public void testMail(){
+    @RequestMapping(value = "/testMail/{email}", method = RequestMethod.GET)
+    public String testMail(@PathVariable("email") String email){
         try {
             PassKitService.createPass("007","Test coupon");
             FileSystemResource file = new FileSystemResource(new File("discountCoupon.pkpass"));
-            MailSenderService.sendMail("savitaj@thoughtworks.com","NAM","Discount Coupon",file);
+            MailSenderService.sendMail(email,"NAM","Discount Coupon",file);
+            return "Success, email was sent";
         }
        catch (Exception e){
           System.out.print(e.getLocalizedMessage());
        }
+       return "Error occurred";
     }
 
 

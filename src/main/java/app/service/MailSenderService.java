@@ -7,8 +7,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
 import java.util.Properties;
-
-import static app.service.QRCodeService.MY_QRCODE_PNG;
+import java.util.Scanner;
 
 public class MailSenderService {
 
@@ -16,9 +15,10 @@ public class MailSenderService {
         JavaMailSenderImpl emailSender = new JavaMailSenderImpl();
         emailSender.setHost("smtp.gmail.com");
         emailSender.setPort(587);
-
-        emailSender.setUsername("savitaj@thoughtworks.com");
-        emailSender.setPassword("pass");
+        Scanner scanner = new Scanner(new File("password.dat"));
+        //Enter email password on separate lines in prototype-private-chain/password.dat, it is gitignored.
+        emailSender.setUsername(scanner.nextLine());
+        emailSender.setPassword(scanner.nextLine());
 
         Properties props = emailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
