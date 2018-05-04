@@ -18,8 +18,9 @@ public class HomePageController {
         "Checkout /Verify-form to validate signature";
     }
 
-    @RequestMapping(value = "/testMail/{email}", method = RequestMethod.GET)
+    @RequestMapping(value = "/testMail/{email:.+}", method = RequestMethod.GET)
     public String testMail(@PathVariable("email") String email){
+        System.out.println(email);
         try {
             PassKitService.createPass("007","Test coupon");
             FileSystemResource file = new FileSystemResource(new File("discountCoupon.pkpass"));

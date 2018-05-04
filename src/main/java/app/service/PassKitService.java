@@ -15,9 +15,6 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static de.brendamour.jpasskit.signing.PKSigningUtil.createSignedAndZippedPkPassArchive;
-import static de.brendamour.jpasskit.signing.PKSigningUtil.loadSigningInformationFromPKCS12AndIntermediateCertificateStreams;
-
 public class PassKitService {
     public static void createPass(String serialNumber, String message) throws Exception {
         String teamIdentifier = "9HK4QP6364";
